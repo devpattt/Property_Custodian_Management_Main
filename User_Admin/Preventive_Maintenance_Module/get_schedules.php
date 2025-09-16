@@ -1,6 +1,6 @@
 <?php 
 header('Content-Type: application/json'); 
-include '../connection.php';  
+include '../../connection.php';  
 
 $sql = "SELECT start_date, asset, type, frequency, personnel FROM bcp_sms4_scheduling ORDER BY start_date"; 
 $result = $conn->query($sql);  

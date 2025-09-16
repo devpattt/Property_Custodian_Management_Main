@@ -31,14 +31,14 @@ if (!$report) {
 }
 
 if (!defined('BASE_URL')) {
-    $base_url = (isset($_SERVER['HTTPS']) ? 'https' : 'http') . '://' . $_SERVER['HTTP_HOST'] . '//';
+    $base_url = (isset($_SERVER['HTTPS']) ? 'https' : 'http') . '://' . $_SERVER['HTTP_HOST'] . '/Property_Custodian_Management/';
 } else {
     $base_url = BASE_URL;
 }
 ?>
 
 <form method="post" action="<?= $base_url ?>User_Custodians/update_status.php">
-    <input type="hidden" name="id" value="<?= $report['id'] ?>">
+    <input type="hidden" name="report_id" value="<?= $report['id'] ?>">
     
     <div class="mb-3">
         <p><b>Item:</b> <?= htmlspecialchars($report['asset']) ?></p>
