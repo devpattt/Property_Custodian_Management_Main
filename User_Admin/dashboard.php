@@ -36,8 +36,8 @@ session_start();
       <h1>Dashboard</h1>
       <nav>
         <ol class="breadcrumb">
-          <li class="breadcrumb-item"><a href="dashboard.php">Home sample</a></li>
-          <li class="breadcrumb-item active">Dashboard</li>
+          <li class="breadcrumb-item"><a href="dashboard.php">Home</a></li>
+          <li class="breadcrumb-item active">Dashboardalexisbakla</li>
         </ol>
       </nav>
     </div><!-- End Page Title -->
