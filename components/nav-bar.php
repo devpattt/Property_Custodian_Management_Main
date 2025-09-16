@@ -2,7 +2,7 @@
 include __DIR__ . '/../config.php';
 
 $userRole = $_SESSION['user_type'] ?? 'guest';
-$userFullname = $_SESSION['fullname'] ?? 'Administrator';
+$userFullname = $_SESSION['fullname'] ?? 'Guest User';
 $username = $_SESSION['username'] ?? 'Guest';
 $userId = $_SESSION['user_id'] ?? 'N/A';
 ?>

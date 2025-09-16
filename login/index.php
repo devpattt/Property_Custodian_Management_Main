@@ -28,7 +28,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $username = $_POST['username'];
     $password = $_POST['password'];
 
-    $sql = "SELECT id ,username, password, email, user_type 
+    $sql = "SELECT id ,username, password, email, user_type, fullname
             FROM bcp_sms4_admins 
             WHERE username = ?";
 
@@ -50,6 +50,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $otp = rand(100000, 999999); 
             $_SESSION['user_id'] = $user['id'];
             $_SESSION['username'] = $user['username'];
+            $_SESSION['fullname'] = $user['fullname'];
             $_SESSION['otp'] = $otp;
             $_SESSION['email'] = $user['email'];
             $_SESSION['user_type'] = $user['user_type']; 
