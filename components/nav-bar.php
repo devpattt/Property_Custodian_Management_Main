@@ -115,6 +115,35 @@ $userId = $_SESSION['user_id'] ?? 'N/A';
             </li>
             <hr class="sidebar-divider">
 
+        <!-- Procurement Coordination -->
+          <?php 
+            $procurement_pages = [
+              'tables-general.html',
+              'tables-data.html'
+            ]; 
+            $is_procurement_active = in_array($current_page, $procurement_pages);
+          ?>
+          <li class="nav-item">
+            <a class="nav-link collapsed <?= $is_procurement_active ? 'active' : '' ?>" 
+              data-bs-target="#procurement-nav" data-bs-toggle="collapse" href="#">
+              <i class="bi bi-layout-text-window-reverse"></i>
+              <span>Procurement Coordination</span>
+              <i class="bi bi-chevron-down ms-auto"></i>
+            </a>
+            <ul id="procurement-nav" class="nav-content collapse <?= $is_procurement_active ? 'show' : '' ?>" data-bs-parent="#sidebar-nav">
+              <li>
+                <a href="tables-general.html" class="<?= $current_page == 'tables-general.html' ? 'active' : '' ?>">
+                  <i class="bi bi-circle"></i><span>General Tables</span>
+                </a>
+              </li>
+              <li>
+                <a href="tables-data.html" class="<?= $current_page == 'tables-data.html' ? 'active' : '' ?>">
+                  <i class="bi bi-circle"></i><span>Data Tables</span>
+                </a>
+              </li>
+            </ul>
+          </li>
+
           <!-- Asset Registry & Tagging -->
           <?php 
             $asset_pages = ['consumable.php','non-consumable.php']; 
@@ -180,32 +209,6 @@ $userId = $_SESSION['user_id'] ?? 'N/A';
             </ul>
           </li>
 
-          <!-- Supplies Inventory Management -->
-          <?php 
-            $supplies_pages = ['inventory.php','tables-data.html']; 
-            $is_supplies_active = in_array($current_page, $supplies_pages);
-          ?>
-          <li class="nav-item">
-            <a class="nav-link collapsed <?= $is_supplies_active ? 'active' : '' ?>" 
-              data-bs-target="#supplies-nav" data-bs-toggle="collapse" href="#">
-              <i class="bi bi-layout-text-window-reverse"></i>
-              <span>Supplies Inventory Management</span>
-              <i class="bi bi-chevron-down ms-auto"></i>
-            </a>
-            <ul id="supplies-nav" class="nav-content collapse <?= $is_supplies_active ? 'show' : '' ?>" data-bs-parent="#sidebar-nav">
-              <li>
-                <a href="<?=BASE_URL?>User_Admin/supplies_inventory/inventory.php" class="<?= $current_page == 'inventory.php' ? 'active' : '' ?>">
-                  <i class="bi bi-circle"></i><span>Inventory</span>
-                </a>
-              </li>
-              <li>
-                <a href="tables-data.html" class="<?= $current_page == 'tables-data.html' ? 'active' : '' ?>">
-                  <i class="bi bi-circle"></i><span>Data Tables</span>
-                </a>
-              </li>
-            </ul>
-          </li>
-
           <!-- Custodian Assignment & Transfer -->
           <?php 
             $custodian_pages = ['charts-chartjs.html','charts-apexcharts.html','charts-echarts.html']; 
@@ -237,12 +240,32 @@ $userId = $_SESSION['user_id'] ?? 'N/A';
             </ul>
           </li>
 
+          <!-- Supplies Inventory Management -->
+          <?php 
+            $supplies_pages = ['inventory.php']; 
+            $is_supplies_active = in_array($current_page, $supplies_pages);
+          ?>
+          <li class="nav-item">
+            <a class="nav-link collapsed <?= $is_supplies_active ? 'active' : '' ?>" 
+              data-bs-target="#supplies-nav" data-bs-toggle="collapse" href="#">
+              <i class="bi bi-layout-text-window-reverse"></i>
+              <span>Supplies Inventory Management</span>
+              <i class="bi bi-chevron-down ms-auto"></i>
+            </a>
+            <ul id="supplies-nav" class="nav-content collapse <?= $is_supplies_active ? 'show' : '' ?>" data-bs-parent="#sidebar-nav">
+              <li>
+                <a href="<?=BASE_URL?>User_Admin/supplies_inventory/inventory.php" class="<?= $current_page == 'inventory.php' ? 'active' : '' ?>">
+                  <i class="bi bi-circle"></i><span>Inventory</span>
+                </a>
+              </li>
+            </ul>
+          </li>
+
           <!-- Preventive Maintenance Scheduling -->
           <?php 
             $maintenance_pages = [
               'schedule_maintenance.php',
-              'records_of_maintenance.php',
-              'icons-boxicons.html'
+              'records_of_maintenance.php'
             ]; 
             $is_maintenance_active = in_array($current_page, $maintenance_pages);
           ?>
@@ -266,11 +289,6 @@ $userId = $_SESSION['user_id'] ?? 'N/A';
                   <i class="bi bi-circle"></i><span>Maintenance Records</span>
                 </a>
               </li>
-              <li>
-                <a href="icons-boxicons.html" class="<?= $current_page == 'icons-boxicons.html' ? 'active' : '' ?>">
-                  <i class="bi bi-circle"></i><span>Boxicons</span>
-                </a>
-              </li>
             </ul>
           </li>
 
@@ -279,7 +297,6 @@ $userId = $_SESSION['user_id'] ?? 'N/A';
           <?php 
             $lost_pages = [
               'reporting_management.php',
-              'tables-data.html'
             ]; 
             $is_lost_active = in_array($current_page, $lost_pages);
           ?>
@@ -297,19 +314,13 @@ $userId = $_SESSION['user_id'] ?? 'N/A';
                   <i class="bi bi-circle"></i><span>Manage Reports</span>
                 </a>
               </li>
-              <li>
-                <a href="tables-data.html" class="<?= $current_page == 'tables-data.html' ? 'active' : '' ?>">
-                  <i class="bi bi-circle"></i><span>Data Tables</span>
-                </a>
-              </li>
             </ul>
           </li>
 
           <!-- Property Audit & Physical Inventory -->
           <?php 
             $audit_pages = [
-              'tables-general.html',
-              'tables-data.html'
+              'property_audit.php',
             ]; 
             $is_audit_active = in_array($current_page, $audit_pages);
           ?>
@@ -322,47 +333,12 @@ $userId = $_SESSION['user_id'] ?? 'N/A';
             </a>
             <ul id="audit-nav" class="nav-content collapse <?= $is_audit_active ? 'show' : '' ?>" data-bs-parent="#sidebar-nav">
               <li>
-                <a href="tables-general.html" class="<?= $current_page == 'tables-general.html' ? 'active' : '' ?>">
-                  <i class="bi bi-circle"></i><span>General Tables</span>
-                </a>
-              </li>
-              <li>
-                <a href="tables-data.html" class="<?= $current_page == 'tables-data.html' ? 'active' : '' ?>">
-                  <i class="bi bi-circle"></i><span>Data Tables</span>
+                <a href="<?= BASE_URL ?>User_Admin/Property_Audit/property_audit.php" class="<?= $current_page == 'property_audit.php' ? 'active' : '' ?>">
+                  <i class="bi bi-circle"></i><span>Property Audit</span>
                 </a>
               </li>
             </ul>
           </li>
-
-          <!-- Procurement Coordination -->
-          <?php 
-            $procurement_pages = [
-              'tables-general.html',
-              'tables-data.html'
-            ]; 
-            $is_procurement_active = in_array($current_page, $procurement_pages);
-          ?>
-          <li class="nav-item">
-            <a class="nav-link collapsed <?= $is_procurement_active ? 'active' : '' ?>" 
-              data-bs-target="#procurement-nav" data-bs-toggle="collapse" href="#">
-              <i class="bi bi-layout-text-window-reverse"></i>
-              <span>Procurement Coordination</span>
-              <i class="bi bi-chevron-down ms-auto"></i>
-            </a>
-            <ul id="procurement-nav" class="nav-content collapse <?= $is_procurement_active ? 'show' : '' ?>" data-bs-parent="#sidebar-nav">
-              <li>
-                <a href="tables-general.html" class="<?= $current_page == 'tables-general.html' ? 'active' : '' ?>">
-                  <i class="bi bi-circle"></i><span>General Tables</span>
-                </a>
-              </li>
-              <li>
-                <a href="tables-data.html" class="<?= $current_page == 'tables-data.html' ? 'active' : '' ?>">
-                  <i class="bi bi-circle"></i><span>Data Tables</span>
-                </a>
-              </li>
-            </ul>
-          </li>
-
 
           <!-- User Roles & Access Control -->
           <?php 
