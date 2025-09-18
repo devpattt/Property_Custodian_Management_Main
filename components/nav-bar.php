@@ -182,7 +182,7 @@ $userId = $_SESSION['user_id'] ?? 'N/A';
 
           <!-- Supplies Inventory Management -->
           <?php 
-            $supplies_pages = ['tables-general.html','tables-data.html']; 
+            $supplies_pages = ['inventory.php','tables-data.html']; 
             $is_supplies_active = in_array($current_page, $supplies_pages);
           ?>
           <li class="nav-item">
@@ -194,8 +194,8 @@ $userId = $_SESSION['user_id'] ?? 'N/A';
             </a>
             <ul id="supplies-nav" class="nav-content collapse <?= $is_supplies_active ? 'show' : '' ?>" data-bs-parent="#sidebar-nav">
               <li>
-                <a href="tables-general.html" class="<?= $current_page == 'tables-general.html' ? 'active' : '' ?>">
-                  <i class="bi bi-circle"></i><span>General Tables</span>
+                <a href="<?=BASE_URL?>User_Admin/supplies_inventory/inventory.php" class="<?= $current_page == 'inventory.php' ? 'active' : '' ?>">
+                  <i class="bi bi-circle"></i><span>Inventory</span>
                 </a>
               </li>
               <li>
