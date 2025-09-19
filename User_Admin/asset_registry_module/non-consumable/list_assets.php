@@ -1,8 +1,22 @@
 <?php
-include "../../../connection.php";
-include "edit_botton_list.php"; // function edit button
-include "get_rows.php";         // get $total_assets
-include "delete_asset.php";     // function delete button
+include("../../../connection.php");
+include "edit_botton_list.php"; 
+include "get_rows.php";        
+include "delete_asset.php";   
+
+$showModal = false;
+$assignData = [];
+
+if (isset($_GET['assign']) && $_GET['assign'] === 'true') {
+    $showModal = true;
+    $assignData = [
+        'delivery_id' => $_GET['delivery_id'] ?? '',
+        'name' => $_GET['name'] ?? '',
+        'category' => $_GET['category'] ?? '',
+        'qty' => $_GET['qty'] ?? ''
+    ];
+}
+
 $result = $conn->query("SELECT * FROM bcp_sms4_asset ORDER BY created_at DESC");
 ?>
 <!DOCTYPE html>
@@ -20,8 +34,6 @@ $result = $conn->query("SELECT * FROM bcp_sms4_asset ORDER BY created_at DESC");
 
       <div class="card">
         <div class="card-body">
-
-          <!-- Table with stripped rows -->
           <table class="table datatable">
             <thead>
               <tr>
@@ -85,24 +97,24 @@ $result = $conn->query("SELECT * FROM bcp_sms4_asset ORDER BY created_at DESC");
     <span class="close" onclick="closeModal('registerAssetModal')">&times;</span>
     <h2>Register New Asset</h2>
     <p class="note">Note: Please fill in all fields carefully to add a new asset accurately.</p>
-
     <form method="POST" action="save_asset.php">
       <div class="form-group">
         <label for="name">Asset Name</label>
-        <input type="text" id="name" name="name" required>
+        <input type="text" id="asset_name" name="name" value="<?= htmlspecialchars($assignData['name'] ?? '') ?>" required>
       </div>
 
       <div class="form-group">
         <label for="category">Category</label>
-        <input type="text" id="category" name="category" required>
+        <input type="text" id="asset_category" name="category" value="<?= htmlspecialchars($assignData['category'] ?? '') ?>" required>
       </div>
 
       <div class="form-group">
         <label for="quantity">Quantity</label>
-        <input type="number" id="quantity" name="quantity" required>
+        <input type="number" id="asset_quantity" name="quantity" value="<?= htmlspecialchars($assignData['qty'] ?? '') ?>" required>
       </div>
 
-      <button type="submit" class="btn-save" onclick="saveClientTime()">Save Asset</button>
+      <input type="hidden" name="delivery_id" value="<?= htmlspecialchars($assignData['delivery_id'] ?? '') ?>">
+      <button type="submit" class="btn-save">Save Asset</button>
     </form>
   </div>
 </div>
@@ -136,7 +148,13 @@ $result = $conn->query("SELECT * FROM bcp_sms4_asset ORDER BY created_at DESC");
 </body>
 </html>
 
-
+  <script>
+  document.addEventListener('DOMContentLoaded', function() {
+      <?php if ($showModal): ?>
+      document.getElementById('registerAssetModal').style.display = 'block';
+      <?php endif; ?>
+  });
+  </script>
 
 <script>
 function confirmDelete(form) {

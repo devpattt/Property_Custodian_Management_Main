@@ -118,8 +118,7 @@ $userId = $_SESSION['user_id'] ?? 'N/A';
         <!-- Procurement Coordination -->
           <?php 
             $procurement_pages = [
-              'tables-general.html',
-              'tables-data.html'
+              'procurement.php'
             ]; 
             $is_procurement_active = in_array($current_page, $procurement_pages);
           ?>
@@ -132,13 +131,8 @@ $userId = $_SESSION['user_id'] ?? 'N/A';
             </a>
             <ul id="procurement-nav" class="nav-content collapse <?= $is_procurement_active ? 'show' : '' ?>" data-bs-parent="#sidebar-nav">
               <li>
-                <a href="tables-general.html" class="<?= $current_page == 'tables-general.html' ? 'active' : '' ?>">
-                  <i class="bi bi-circle"></i><span>General Tables</span>
-                </a>
-              </li>
-              <li>
-                <a href="tables-data.html" class="<?= $current_page == 'tables-data.html' ? 'active' : '' ?>">
-                  <i class="bi bi-circle"></i><span>Data Tables</span>
+                <a href="<?= BASE_URL ?>User_Admin/Procurement/procurement.php" class="<?= $current_page == 'procurement.php' ? 'active' : '' ?>">
+                  <i class="bi bi-circle"></i><span>Item Delivery</span>
                 </a>
               </li>
             </ul>

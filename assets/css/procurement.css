@@ -1,0 +1,132 @@
+    body {
+      font-family: 'Inter', sans-serif;
+      padding: 20px;
+      background: #f5f6f8;
+      color: #333;
+    }
+
+    h2 {
+      margin-bottom: 10px;
+      color: #222;
+    }
+
+    .icon {
+      width: 60px;
+      height: 60px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      border-radius: 50%;
+      font-size: 30px; 
+      margin: 0 auto 10px auto;
+      color: white;
+    }
+
+    .controls {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    input[type="text"] {
+      padding: 8px 12px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      width: 250px;
+    }
+
+    button {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 6px;
+      background: #4a6cf7;
+      color: white;
+      font-size: 14px;
+      cursor: pointer;
+      transition: background 0.2s ease;
+    }
+    button:hover {
+      background: #3b56c4;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #fff;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+    }
+    th, td {
+      padding: 12px;
+      text-align: center;
+    }
+    th {
+      background: #f1f3f6;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    tr:nth-child(even) { background: #fafafa; }
+
+    .pagination {
+      margin-top: 12px;
+      text-align: center;
+    }
+    .pagination button {
+      margin: 0 3px;
+      padding: 6px 12px;
+      font-size: 13px;
+      border-radius: 4px;
+      background: #eee;
+      color: #333;
+    }
+    .pagination button.active {
+      background: #4a6cf7;
+      color: white;
+    }
+
+    .grid {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+      margin-top: 15px;
+    }
+    .card {
+      background: #fff;
+      border: 1px solid #eee;
+      border-radius: 12px;
+      padding: 15px;
+      width: 220px;
+      text-align: center;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+
+    .icon {
+      font-size: 40px;
+      margin-bottom: 10px;
+      display: inline-block;
+      padding: 15px;
+      border-radius: 50%;
+      color: white;
+    }
+    .electronics { background: #4a6cf7; }
+    .furniture { background: #c08457; }
+    .consumables { background: #2ecc71; }
+
+    .status {
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 500;
+      display: inline-block;
+    }
+    .Received { background: #d1fae5; color: #065f46; }
+    .Pending { background: #fef9c3; color: #92400e; }
+    .Rejected { background: #fee2e2; color: #991b1b; }
+

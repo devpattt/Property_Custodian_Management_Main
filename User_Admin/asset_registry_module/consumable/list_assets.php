@@ -1,8 +1,22 @@
 <?php
-include "../../../connection.php";
-include "edit_botton_list.php"; // to funtion edit button
-include "get_rows.php"; // to get $total_assets
-include "delete_asset.php"; // to funtion delete button
+include("../../../connection.php");
+include "edit_botton_list.php"; 
+include "get_rows.php"; 
+include "delete_asset.php"; 
+
+$showModal = false;
+$assignData = [];
+
+if (isset($_GET['assign']) && $_GET['assign'] === 'true') {
+    $showModal = true;
+    $assignData = [
+        'delivery_id' => $_GET['delivery_id'] ?? '',
+        'name' => $_GET['name'] ?? '',
+        'category' => $_GET['category'] ?? '',
+        'qty' => $_GET['qty'] ?? ''
+    ];
+}
+
 $result = $conn->query("SELECT * FROM bcp_sms4_consumable ORDER BY asset_tag DESC");
 ?>
 <!DOCTYPE html>
@@ -23,8 +37,6 @@ $result = $conn->query("SELECT * FROM bcp_sms4_consumable ORDER BY asset_tag DES
       <div class="card">
         <div class="card-body">
          <!-- <h5 class="card-title">Asset Count/Box <?= $total_assets ?></h5>-->
-
-          <!-- Table with stripped rows -->
           <table class="table datatable">
             <thead>
               <tr>
@@ -89,34 +101,35 @@ $result = $conn->query("SELECT * FROM bcp_sms4_consumable ORDER BY asset_tag DES
      Note: The <em>Box</em> and <em>Quantity</em> fields are optional. Any incorrect entries can be corrected in the <b>List of School Consumable Assets section.</b>
     </p>
 
-    <form method="POST" action="save_asset.php">
-      <div class="form-group">
-        <label for="name">Asset Name</label>
-        <input type="text" id="name" name="name" required>
-      </div>
+<form method="POST" action="save_asset.php">
+  <div class="form-group">
+    <label for="name">Asset Name</label>
+    <input type="text" id="asset_name" name="name" value="<?= htmlspecialchars($assignData['name'] ?? '') ?>" required>
+  </div>
 
-      <div class="form-group">
-        <label for="category">Category</label>
-        <input type="text" id="category" name="category" required>
-      </div>
+  <div class="form-group">
+    <label for="category">Category</label>
+    <input type="text" id="asset_category" name="category" value="<?= htmlspecialchars($assignData['category'] ?? '') ?>" required>
+  </div>
 
-      <div class="form-group">
-        <label for="box">Box</label>
-        <input type="number" id="box" name="box">
-      </div>
+  <div class="form-group">
+    <label for="box">Box</label>
+    <input type="number" id="box" name="box" value="1">
+  </div>
 
-      <div class="form-group">
-        <label for="quantity">Quantity</label>
-        <input type="number" id="quantity" name="quantity">
-      </div>
+  <div class="form-group">
+    <label for="quantity">Quantity</label>
+    <input type="number" id="asset_quantity" name="quantity" value="<?= htmlspecialchars($assignData['qty'] ?? '') ?>" required>
+  </div>
 
-      <div class="form-group">
-        <label for="expiration">Expiration</label>
-        <input type="date" id="expiration" name="expiration" required>
-      </div>
+  <div class="form-group">
+    <label for="expiration">Expiration</label>
+    <input type="date" id="expiration" name="expiration" required>
+  </div>
 
-      <button type="submit" class="btn-save">Save Asset</button>
-    </form>
+  <input type="hidden" name="delivery_id" value="<?= htmlspecialchars($assignData['delivery_id'] ?? '') ?>">
+  <button type="submit" class="btn-save">Save Asset</button>
+</form>
   </div>
 </div>
 
@@ -155,6 +168,16 @@ function confirmDelete(form) {
 }
 </script>
 
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    <?php if ($showModal): ?>
+    const nextYear = new Date();
+    nextYear.setFullYear(nextYear.getFullYear() + 1);
+    document.getElementById('expiration').value = nextYear.toISOString().split('T')[0];
+    document.getElementById('registerAssetModal').style.display = 'block';
+    <?php endif; ?>
+});
+</script>
 
 <!-- Example confirm modal -->
 <div id="confirmModal" class="modal">
