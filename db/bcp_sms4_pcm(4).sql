@@ -33,7 +33,7 @@ CREATE TABLE `bcp_sms4_asset` (
   `asset_id` int NOT NULL AUTO_INCREMENT,
   `item_id` int NOT NULL,
   `property_tag` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
-  `status` enum('In-Use','In-Storage','Damaged','Disposed') COLLATE utf8mb4_general_ci DEFAULT 'In-Use',
+  `status` enum('In-Use','In-Storage','Damaged','Disposed','Lost') COLLATE utf8mb4_general_ci DEFAULT 'In-Use',
   `location` varchar(100) COLLATE utf8mb4_general_ci DEFAULT NULL,
   `assigned_to` varchar(100) COLLATE utf8mb4_general_ci DEFAULT NULL,
   `date_registered` date NOT NULL,
@@ -154,7 +154,6 @@ CREATE TABLE `bcp_sms4_procurement` (
 DROP TABLE IF EXISTS `bcp_sms4_reports`;
 CREATE TABLE `bcp_sms4_reports` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `asset` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
   `report_type` enum('Lost','Damaged','Repair/Replacement') COLLATE utf8mb4_general_ci NOT NULL,
   `reported_by` int NOT NULL,
   `assigned_to` int DEFAULT NULL,
@@ -162,12 +161,15 @@ CREATE TABLE `bcp_sms4_reports` (
   `status` enum('Pending','In-Progress','Resolved','Rejected') COLLATE utf8mb4_general_ci DEFAULT 'Pending',
   `description` text COLLATE utf8mb4_general_ci,
   `evidence` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `asset_id` int NOT NULL,
   PRIMARY KEY (`id`),
   KEY `reported_by` (`reported_by`),
   KEY `assigned_to` (`assigned_to`),
+  KEY `fk_reports_asset` (`asset_id`),
   CONSTRAINT `bcp_sms4_reports_ibfk_1` FOREIGN KEY (`assigned_to`) REFERENCES `bcp_sms4_admins` (`id`),
-  CONSTRAINT `bcp_sms4_reports_ibfk_7` FOREIGN KEY (`reported_by`) REFERENCES `bcp_sms4_admins` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+  CONSTRAINT `bcp_sms4_reports_ibfk_7` FOREIGN KEY (`reported_by`) REFERENCES `bcp_sms4_admins` (`id`),
+  CONSTRAINT `fk_reports_asset` FOREIGN KEY (`asset_id`) REFERENCES `bcp_sms4_asset` (`asset_id`) ON DELETE RESTRICT ON UPDATE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=15 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 DROP TABLE IF EXISTS `bcp_sms4_scheduling`;
 CREATE TABLE `bcp_sms4_scheduling` (
@@ -443,19 +445,9 @@ INSERT INTO `bcp_sms4_procurement` (`procurement_id`, `item_id`, `quantity`, `re
 (13, 14, 30, '2025-09-14', 'Admin Office', NULL, NULL, 'Printer ink refills', 'Completed', '2025-09-20 16:40:00'),
 (14, 15, 15, '2025-09-15', 'Accounting', NULL, NULL, 'Toner replacement for reports', 'Completed', '2025-09-20 16:50:00'),
 (15, 16, 5, '2025-09-16', 'Clinic', NULL, NULL, 'Restock of medical supplies', 'Completed', '2025-09-20 17:00:00');
-INSERT INTO `bcp_sms4_reports` (`id`, `asset`, `report_type`, `reported_by`, `assigned_to`, `date_reported`, `status`, `description`, `evidence`) VALUES
-(1, 'Projector - Room 201', 'Lost', 3, 2, '2025-09-16 21:30:04', 'Resolved', 'Projector went missing after class.', NULL),
-(2, 'Library Chair - ID123', 'Damaged', 3, 2, '2025-09-17 06:04:23', 'Resolved', 'Chair leg broken, unsafe to use.', 'chair_damage.jpg'),
-(3, 'Laptop - SN456', 'Repair/Replacement', 3, NULL, '2025-09-03 00:00:00', 'Resolved', 'Laptop not booting, replaced with new unit.', NULL),
-(4, 'Whiteboard Marker Set', 'Lost', 3, NULL, '2025-09-05 00:00:00', 'Rejected', 'Reported lost, later found.', NULL),
-(5, 'Projector - Room 201', 'Lost', 3, NULL, '2025-09-01 00:00:00', 'Pending', 'Projector went missing after class.', NULL),
-(6, 'Library Chair', 'Damaged', 3, 2, '2025-09-16 21:29:43', 'Pending', 'One leg is broken and unstable.', NULL),
-(7, 'Whiteboard Marker Set', 'Lost', 3, 2, '2025-09-16 21:29:43', 'Pending', 'Reported lost, later found.', NULL),
-(8, 'Air Conditioner', '', 3, 2, '2025-09-16 21:29:43', 'Pending', 'Not cooling properly, needs replacement.', NULL),
-(9, 'Fire Extinguisher', 'Damaged', 3, 2, '2025-09-08 00:00:00', 'Resolved', 'Pressure gauge is broken.', NULL),
-(10, 'aw', 'Damaged', 2, 2, '2025-09-15 10:15:06', 'Resolved', 'aa', NULL),
-(11, 'aw', 'Lost', 2, 2, '2025-09-15 10:15:10', 'Resolved', 'aw', NULL),
-(12, 'Marijuana', 'Repair/Replacement', 2, 2, '2025-09-15 10:15:13', 'Resolved', 'aw', NULL);
+INSERT INTO `bcp_sms4_reports` (`id`, `report_type`, `reported_by`, `assigned_to`, `date_reported`, `status`, `description`, `evidence`, `asset_id`) VALUES
+(13, 'Lost', 2, NULL, '2025-09-20 17:36:23', 'Pending', 'aw', NULL, 5),
+(14, 'Damaged', 2, NULL, '2025-09-20 17:39:11', 'Pending', 'aw', NULL, 7);
 INSERT INTO `bcp_sms4_scheduling` (`id`, `asset`, `type`, `frequency`, `personnel`, `start_date`, `created_at`, `status`) VALUES
 (5, 'Air Conditioner', 'Cleaning', 'Weekly', 'Juan Delacruz', '2025-09-10', '2025-09-09 03:24:14', 'Scheduled'),
 (6, 'Air Conditioner', 'Inspection', 'Weekly', 'sdsd', '2025-09-10', '2025-09-09 03:30:24', 'Scheduled'),
