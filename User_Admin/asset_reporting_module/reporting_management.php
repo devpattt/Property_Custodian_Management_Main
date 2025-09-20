@@ -1,9 +1,18 @@
 <?php
 session_start();
-
 include '../../connection.php';  
 
-$query = "SELECT r.id, u.username AS teacher, r.asset, r.report_type, r.status, r.description, r.date_reported, r.evidence, c.username AS custodian FROM bcp_sms4_reports r JOIN bcp_sms4_admins u ON r.reported_by = u.id LEFT JOIN bcp_sms4_admins c ON r.assigned_to = c.id ORDER BY r.date_reported DESC";
+// Join reports with asset and items to get asset tag and item name
+$query = "SELECT r.id, u.username AS teacher, r.report_type, r.status, r.description, r.date_reported, r.evidence,
+                 a.property_tag, i.item_name,
+                 c.username AS custodian
+          FROM bcp_sms4_reports r
+          JOIN bcp_sms4_admins u ON r.reported_by = u.id
+          LEFT JOIN bcp_sms4_admins c ON r.assigned_to = c.id
+          LEFT JOIN bcp_sms4_asset a ON r.asset_id = a.asset_id
+          LEFT JOIN bcp_sms4_items i ON a.item_id = i.item_id
+          ORDER BY r.date_reported DESC";
+
 $results = $conn->query($query);
 ?>
 <!DOCTYPE html>
@@ -36,125 +45,106 @@ $results = $conn->query($query);
 include '../../components/nav-bar.php';
 ?>
   <main id="main" class="main">
+<div class="pagetitle">
+  <h1>Records Management</h1>
+  <nav>
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="<?=BASE_URL?>User_Admin/dashboard.php">Home</a></li>
+      <li class="breadcrumb-item">Lost, Damaged or Unserviceable Items</li>
+      <li class="breadcrumb-item active">Report Management</li>
+    </ol>
+  </nav>
+</div>
 
-    <div class="pagetitle">
-      <h1>Records Management</h1>
-      <nav>
-        <ol class="breadcrumb">
-          <li class="breadcrumb-item"><a href="<?=BASE_URL?>User_Admin/dashboard.php">Home</a></li>
-          <li class="breadcrumb-item">Lost, Damaged or Unserviceable Items</li>
-          <li class="breadcrumb-item active">Report Management</li>
-        </ol>
-      </nav>
-    </div><!-- End Page Title -->
-
-    <section class="section">
-    <div class="row">
-        <div class="col-lg-12">
-        <div class="card">
-            <div class="card-body">
-            <h5 class="card-title">All Reports</h5>
-            <p><em>Below is a list of all lost, damaged, or replacement requests. You can <b>search, sort, and filter</b> the records, and use actions to manage them.</em></p>
-            
-            <table class="table datatable">
-                <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Item Name</th>
-                    <th>Report Type</th>
-                    <th>Reported By</th>
-                    <th>Date</th>
-                    <th>Status</th>
-                    <th>Action</th>
-                </tr>
-                </thead>
-                <tbody>
-                <?php while ($row = $results->fetch_assoc()): ?>
-                <tr>
-                    <td><?= $row['id']?></td>
-                    <td><?= htmlspecialchars($row['asset'])?></td>
-                    <td><?= htmlspecialchars($row['report_type'])?></td>
-                    <td><?= htmlspecialchars($row['teacher'])?></td>
-                    <td><?= date('Y/m/d', strtotime($row['date_reported']))?></td>
-                        <td>
-                            <?php if (!empty($row['status'])): ?>
-                                <?php 
-                                $statusClass = match($row['status']) {
-                                    'Resolved'    => 'badge bg-success',
-                                    'In-Progress' => 'badge bg-warning',
-                                    'Pending'     => 'badge bg-primary',
-                                    'Rejected'    => 'badge bg-danger',
-                                    default       => 'badge bg-secondary'
-                                };
-                                ?>
-                                <span class="<?= $statusClass; ?>"><?= htmlspecialchars($row['status']); ?></span>
-                            <?php else: ?>
-                                <span class="text-muted">—</span> 
-                            <?php endif; ?>
-                        </td>
-                    <td>
+<section class="section">
+<div class="row">
+    <div class="col-lg-12">
+    <div class="card">
+        <div class="card-body">
+        <h5 class="card-title">All Reports</h5>
+        <p><em>Below is a list of all lost, damaged, or replacement requests. You can <b>search, sort, and filter</b> the records, and use actions to manage them.</em></p>
+        
+        <table class="table datatable">
+            <thead>
+            <tr>
+                <th>ID</th>
+                <th>Asset Tag</th>
+                <th>Item Name</th>
+                <th>Report Type</th>
+                <th>Reported By</th>
+                <th>Date</th>
+                <th>Status</th>
+                <th>Action</th>
+            </tr>
+            </thead>
+            <tbody>
+            <?php while ($row = $results->fetch_assoc()): ?>
+            <tr>
+                <td><?= $row['id']?></td>
+                <td><?= htmlspecialchars($row['property_tag'] ?? 'N/A') ?></td>
+                <td><?= htmlspecialchars($row['item_name'] ?? 'N/A') ?></td>
+                <td><?= htmlspecialchars($row['report_type'])?></td>
+                <td><?= htmlspecialchars($row['teacher'])?></td>
+                <td><?= date('Y/m/d', strtotime($row['date_reported']))?></td>
+                <td>
+                    <?php 
+                    $statusClass = match($row['status']) {
+                        'Resolved'    => 'badge bg-success',
+                        'In-Progress' => 'badge bg-warning',
+                        'Pending'     => 'badge bg-primary',
+                        'Rejected'    => 'badge bg-danger',
+                        default       => 'badge bg-secondary'
+                    };
+                    ?>
+                    <span class="<?= $statusClass; ?>"><?= htmlspecialchars($row['status']); ?></span>
+                </td>
+                <td>
                     <button class="btn btn-sm btn-info view-btn" data-id="<?= $row['id']; ?>">View</button>
-                    </td>
-                </tr>
-                <?php endwhile; ?>
-                <?php if (empty($results)): ?>
-                <tr>
-                    <td colspan="6" class="text-center">No reports found</td>
-                </tr>
-                <?php endif; ?>
-                </tbody>
-            </table>
-            </div>
-        </div>
+                </td>
+            </tr>
+            <?php endwhile; ?>
+            </tbody>
+        </table>
         </div>
     </div>
-    </section>
+    </div>
+</div>
+</section>
 
-    <script>
-    $(document).ready(function() {
-        if (!$.fn.DataTable.isDataTable('.datatable')) {
-            $('.datatable').DataTable({
-                "pageLength": 10,
-                "lengthChange": true,
-                "searching": true,
-                "ordering": true,
-                "info": true,
-                "autoWidth": false,
-                "responsive": true,
-                "columnDefs": [
-                    {
-                        "targets": 4, 
-                        "type": "date"
-                    },
-                    {
-                        "targets": 5, 
-                        "orderable": true
-                    }
-                ]
-            });
-        }
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    document.querySelectorAll(".view-btn").forEach(button => {
+        button.addEventListener("click", function () {
+            let reportId = this.getAttribute("data-id");
+
+            fetch("fetch_reports.php?id=" + reportId) 
+                .then(response => response.text())
+                .then(data => {
+                    document.getElementById("report-details").innerHTML = data;
+                    new bootstrap.Modal(document.getElementById("viewReportModal")).show();
+                });
+        });
     });
-    </script>
-  </main>
+});
+</script>
 
-        <!-- View Report Modal -->
-        <div class="modal fade" id="viewReportModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-md modal-dialog-centered">
-            <div class="modal-content border-0 shadow rounded-4">
-    
-            <div class="modal-header bg-light border-0 rounded-top-4">
-                <h6 class="modal-title fw-semibold text-dark">
-                <i class="bi bi-file-earmark-text me-2 text-primary"></i> Report Details
-                </h6>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
+<div class="modal fade" id="viewReportModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-md modal-dialog-centered">
+        <div class="modal-content border-0 shadow rounded-4">
 
-            <div class="modal-body p-3" id="report-details">
-                <p class="text-center text-muted small">Loading...</p>
-            </div>       
-            </div>
+        <div class="modal-header bg-light border-0 rounded-top-4">
+            <h6 class="modal-title fw-semibold text-dark">
+            <i class="bi bi-file-earmark-text me-2 text-primary"></i> Report Details
+            </h6>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
+
+        <div class="modal-body p-3" id="report-details">
+            <p class="text-center text-muted small">Loading...</p>
+        </div>       
         </div>
+    </div>
+</div>
 
         <script>
         document.addEventListener("DOMContentLoaded", function () {

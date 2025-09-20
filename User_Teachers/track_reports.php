@@ -3,7 +3,15 @@ session_start();
 include '../connection.php';
 
 $teacher_id = $_SESSION['user_id'];
-$sql = "SELECT id, asset, report_type, status, date_reported, evidence FROM bcp_sms4_reports WHERE reported_by = ?";
+
+$sql = "SELECT r.id, r.report_type, r.status, r.date_reported, r.evidence, 
+               a.property_tag, i.item_name
+        FROM bcp_sms4_reports r
+        LEFT JOIN bcp_sms4_asset a ON r.asset_id = a.asset_id
+        LEFT JOIN bcp_sms4_items i ON a.item_id = i.item_id
+        WHERE r.reported_by = ?
+        ORDER BY r.date_reported DESC";
+
 $stmt = $conn->prepare($sql);
 $stmt->bind_param("i", $teacher_id);
 $stmt->execute();
@@ -38,73 +46,69 @@ $result = $stmt->get_result();
   <?php
     include "../components/nav-bar.php";
   ?>
-  <main id="main" class="main">
-    <div class="pagetitle">
-      <h1>Track Reports</h1>
-      <nav>
-        <ol class="breadcrumb">
-          <li class="breadcrumb-item"><a href="<?=BASE_URL?>User_Teachers/dashboard_teacher.php">Home</a></li>
-          <li class="breadcrumb-item active">Track Reports</li>
-        </ol>
-      </nav>
-    </div>
+<main id="main" class="main">
+<div class="pagetitle">
+  <h1>Track Reports</h1>
+  <nav>
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="<?=BASE_URL?>User_Teachers/dashboard_teacher.php">Home</a></li>
+      <li class="breadcrumb-item active">Track Reports</li>
+    </ol>
+  </nav>
+</div>
 
 <section>
-  <?php if(isset($_GET['success'])): ?>
-    <div class="alert alert-success alert-dismissible fade show" role="alert">
-      Lost Item Reported Successfully!!!
-      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-  <?php endif; ?>
+<?php if(isset($_GET['success'])): ?>
+<div class="alert alert-success alert-dismissible fade show" role="alert">
+  Report Submitted Successfully!
+  <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+</div>
+<?php endif; ?>
 
-  <div class="card">
-    <div class="card-body">
-      <h5 class="card-title">Lost Items Report</h5>
-      <p class="small">This table shows all lost items reported in the system.</p>
-
-      <!-- Table with datatable -->
-      <table class="table datatable">
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Item</th>
-            <th>Type</th>
-            <th>Status</th>
-            <th>Date</th>
-            <th>Photo</th>
-          </tr>
-        </thead>
-        <tbody>
-          <?php while ($row = $result->fetch_assoc()): ?>
-            <tr>
-              <td><?= htmlspecialchars($row['id']) ?></td>
-              <td><?= htmlspecialchars($row['asset']) ?></td>
-              <td><?= htmlspecialchars($row['report_type']) ?></td>
-              <td>
-                <?php if($row['status'] == 'Pending'): ?>
-                  <span class="badge bg-warning"><?= htmlspecialchars($row['status']) ?></span>
-                <?php elseif($row['status'] == 'Resolved'): ?>
-                  <span class="badge bg-success"><?= htmlspecialchars($row['status']) ?></span>
-                <?php else: ?>
-                  <span class="badge bg-secondary"><?= htmlspecialchars($row['status']) ?></span>
-                <?php endif; ?>
-              </td>
-              <td><?= htmlspecialchars($row['date_reported']) ?></td>
-              <td class="text-center">
-                <?php if(!empty($row['evidence'])): ?>
-                  <a href="uploads/<?= htmlspecialchars($row['evidence']) ?>" target="_blank" class="btn btn-sm btn-primary">View</a>
-                <?php else: ?>
-                  <span class="text-muted">No Photo</span>
-                <?php endif; ?>
-              </td>
-            </tr>
-          <?php endwhile; ?>
-        </tbody>
-      </table>
-      <!-- End datatable -->
-
-    </div>
+<div class="card">
+  <div class="card-body">
+    <h5 class="card-title">Reports</h5>
+    <table class="table datatable">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Asset Tag</th>
+          <th>Item Name</th>
+          <th>Report Type</th>
+          <th>Status</th>
+          <th>Date</th>
+          <th>Photo</th>
+        </tr>
+      </thead>
+      <tbody>
+        <?php while($row = $result->fetch_assoc()): ?>
+        <tr>
+          <td><?= htmlspecialchars($row['id']) ?></td>
+          <td><?= htmlspecialchars($row['property_tag'] ?? 'N/A') ?></td>
+          <td><?= htmlspecialchars($row['item_name'] ?? 'N/A') ?></td>
+          <td><?= htmlspecialchars($row['report_type']) ?></td>
+          <td>
+            <?php
+              if($row['status'] == 'Pending') echo '<span class="badge bg-warning">Pending</span>';
+              elseif($row['status'] == 'Resolved') echo '<span class="badge bg-success">Resolved</span>';
+              elseif($row['status'] == 'Rejected') echo '<span class="badge bg-danger">Rejected</span>';
+              else echo '<span class="badge bg-secondary">'.htmlspecialchars($row['status']).'</span>';
+            ?>
+          </td>
+          <td><?= htmlspecialchars($row['date_reported']) ?></td>
+          <td class="text-center">
+            <?php if(!empty($row['evidence'])): ?>
+              <a href="uploads/<?= htmlspecialchars($row['evidence']) ?>" target="_blank" class="btn btn-sm btn-primary">View</a>
+            <?php else: ?>
+              <span class="text-muted">No Photo</span>
+            <?php endif; ?>
+          </td>
+        </tr>
+        <?php endwhile; ?>
+      </tbody>
+    </table>
   </div>
+</div>
 </section>
 </main>
 

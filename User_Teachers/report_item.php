@@ -35,21 +35,28 @@ include "../connection.php"; // <-- make sure this points to your DB connection
       <form method="post" action="<?=BASE_URL?>User_Teachers/save_report.php" enctype="multipart/form-data" class="report-form">
         <h2>Report Lost/Damaged Item</h2>
 
-        <!-- Select Item -->
-        <div class="form-group">
-          <label for="item_id">Item Name</label>
-          <select id="item_id" name="item_id" required>
-            <option value="">-- Select Item --</option>
-            <?php
-              $items = $conn->query("SELECT item_id, item_name FROM bcp_sms4_items ORDER BY item_name ASC");
-              if ($items && $items->num_rows > 0) {
-                while ($row = $items->fetch_assoc()) {
-                  echo "<option value='{$row['item_id']}'>{$row['item_name']}</option>";
-                }
+      <div class="form-group">
+        <label for="asset_id">Asset Tag</label>
+        <select id="asset_id" name="asset_id" required>
+          <option value="">-- Select Asset --</option>
+          <?php
+            // Fetch all assets that are in use or available for reporting
+            $assets = $conn->query("
+              SELECT a.asset_id, a.property_tag, i.item_name
+              FROM bcp_sms4_asset a
+              JOIN bcp_sms4_items i ON a.item_id = i.item_id
+              WHERE a.status != 'Disposed'
+              ORDER BY a.property_tag ASC
+            ");
+            if ($assets && $assets->num_rows > 0) {
+              while ($row = $assets->fetch_assoc()) {
+                echo "<option value='{$row['asset_id']}'>{$row['property_tag']} ({$row['item_name']})</option>";
               }
-            ?>
-          </select>
-        </div>
+            }
+          ?>
+        </select>
+      </div>
+
 
         <!-- Report Type -->
         <div class="form-group">
