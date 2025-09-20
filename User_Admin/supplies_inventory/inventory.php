@@ -46,7 +46,7 @@ session_start();
         include '../../connection.php'; 
         // Active assets (status: active > 0)
         $active_assets = 0;
-        $result = $conn->query("SELECT COUNT(*) as total FROM bcp_sms4_asset WHERE active > 0");
+        $result = $conn->query("SELECT COUNT(*) as total FROM bcp_sms4_asset WHERE status = 'In-Use' ");
         if ($result && $row = $result->fetch_assoc()) {
             $active_assets = $row['total'];
         }
@@ -56,7 +56,7 @@ session_start();
         $result = $conn->query("
             SELECT COUNT(*) as total 
             FROM bcp_sms4_asset a
-            WHERE a.active = 0 AND a.in_repair = 0 AND a.disposed = 0
+            WHERE a.status = 'In-Storage' AND a.status = 'Damaged' AND a.status = 'Disposed'
         ");
         if ($result && $row = $result->fetch_assoc()) {
             $unassigned_assets = $row['total'];
@@ -64,14 +64,14 @@ session_start();
 
         // Disposed assets
         $disposed_assets = 0;
-        $result = $conn->query("SELECT COUNT(*) as total FROM bcp_sms4_asset WHERE disposed > 0");
+        $result = $conn->query("SELECT COUNT(*) as total FROM bcp_sms4_asset WHERE status = 'Disposed' ");
         if ($result && $row = $result->fetch_assoc()) {
             $disposed_assets = $row['total'];
         }
 
         // Need Repair (was Low Stock before)
         $need_repair = 0;
-        $result = $conn->query("SELECT COUNT(*) as total FROM bcp_sms4_asset WHERE in_repair > 0");
+        $result = $conn->query("SELECT COUNT(*) as total FROM bcp_sms4_asset WHERE status = 'Damaged'");
         if ($result && $row = $result->fetch_assoc()) {
             $need_repair = $row['total'];
         }
@@ -89,7 +89,7 @@ session_start();
         </div>
         <div class="ps-3">
           <h6><?php echo $active_assets; ?></h6>
-          <span class="text-success small">🟢 In service</span>
+          <span class="text-success small">🟢 In Use</span>
         </div>
       </div>
     </div>
@@ -107,7 +107,7 @@ session_start();
         </div>
         <div class="ps-3">
           <h6><?php echo $unassigned_assets; ?></h6>
-          <span class="text-warning small">🟡 Waiting assignment</span>
+          <span class="text-warning small">🟡 In Storage</span>
         </div>
       </div>
     </div>
@@ -125,7 +125,7 @@ session_start();
         </div>
         <div class="ps-3">
           <h6><?php echo $disposed_assets; ?></h6>
-          <span class="text-danger small">🔴 Retired</span>
+          <span class="text-danger small">🔴 Disposed</span>
         </div>
       </div>
     </div>
@@ -179,84 +179,91 @@ session_start();
                 <thead>
                   <tr>
                     <th>ID</th>
-                    <th>Tag</th>
-                    <th>Name</th>
+                    <th>Property Tag</th>
+                    <th>Item Name</th>
                     <th>Category</th>
-                    <th>Qty</th>
-                    <th>Active</th>
-                    <th>In Repair</th>
-                    <th>Disposed</th>
-                    <th>Purchase Date</th>
+                    <th>Status</th>
+                    <th>Date Registered</th>
                   </tr>
                 </thead>
-                    <tbody>
-                    <?php
-                    $assets = $conn->query("SELECT * FROM bcp_sms4_asset ORDER BY id DESC");
-                    if ($assets && $assets->num_rows > 0):
-                        while ($row = $assets->fetch_assoc()):
-                    ?>
-                        <tr>
-                            <td><?= $row['id'] ?></td>
-                            <td><?= $row['asset_tag'] ?></td>
-                            <td><?= $row['name'] ?></td>
-                            <td><?= $row['category'] ?></td>
-                            <td><?= $row['quantity'] ?></td>
-                            <td><?= $row['active'] ?></td>
-                            <td><?= $row['in_repair'] ?></td>
-                            <td><?= $row['disposed'] ?></td>
-                            <td><?= $row['purchase_date'] ?></td>
-                        </tr>
-                    <?php
-                        endwhile;
-                    else:
-                    ?>
-                        <tr><td colspan="9">No assets found</td></tr>
-                    <?php endif; ?>
-                    </tbody>
+                <tbody>
+                  <?php
+                  $assets = $conn->query("
+                    SELECT a.asset_id, a.property_tag, a.status, a.date_registered,
+                          i.item_name, i.category
+                    FROM bcp_sms4_asset a
+                    JOIN bcp_sms4_items i ON a.item_id = i.item_id
+                    ORDER BY a.asset_id DESC
+                  ");
+                  if ($assets && $assets->num_rows > 0):
+                      while ($row = $assets->fetch_assoc()):
+                  ?>
+                      <tr>
+                          <td><?= $row['asset_id'] ?></td>
+                          <td><?= $row['property_tag'] ?></td>
+                          <td><?= $row['item_name'] ?></td>
+                          <td><?= $row['category'] ?></td>
+                          <td><?= $row['status'] ?></td>
+                          <td><?= $row['date_registered'] ?></td>
+                      </tr>
+                  <?php
+                      endwhile;
+                  else:
+                  ?>
+                      <tr><td colspan="7">No assets found</td></tr>
+                  <?php endif; ?>
+                </tbody>
               </table>
             </div>
 
+
             <!-- Consumables Table -->
             <div class="tab-pane fade" id="consumables" role="tabpanel">
-              <h5 class="card-title">Consumables</h5>
-              <table class="table datatable">
-                <thead>
-                  <tr>
-                    <th>ID</th>
-                    <th>Tag</th>
-                    <th>Name</th>
-                    <th>Category</th>
-                    <th>Box</th>
-                    <th>Quantity</th>
-                    <th>Expiration</th>
-                    <th>Added Date</th>
-                  </tr>
-                </thead>
+            <h5 class="card-title">Consumables</h5>
+            <table class="table datatable">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Item Name</th>
+                  <th>Category</th>
+                  <th>Unit</th>
+                  <th>Quantity</th>
+                  <th>Status</th>
+                  <th>Expiration</th>
+                  <th>Date Received</th>
+                </tr>
+              </thead>
               <tbody>
-                    <?php
-                    $consumables = $conn->query("SELECT * FROM bcp_sms4_consumable ORDER BY id DESC");
-                    if ($consumables && $consumables->num_rows > 0):
-                        while ($row = $consumables->fetch_assoc()):
-                    ?>
-                        <tr>
-                            <td><?= $row['id'] ?></td>
-                            <td><?= $row['asset_tag'] ?></td>
-                            <td><?= $row['name'] ?></td>
-                            <td><?= $row['category'] ?></td>
-                            <td><?= $row['box'] ?></td>
-                            <td><?= $row['quantity'] ?></td>
-                            <td><?= $row['expiration'] ?></td>
-                            <td><?= $row['add_date'] ?></td>
-                        </tr>
-                    <?php
-                        endwhile;
-                    else:
-                    ?>
-                        <tr><td colspan="8">No consumables found</td></tr>
-                    <?php endif; ?>
-                    </tbody>
-              </table>
-            </div>
+                <?php
+                $consumables = $conn->query("
+                  SELECT c.id, c.unit, c.quantity, c.status, c.expiration, c.date_received,
+                        i.item_name, i.category
+                  FROM bcp_sms4_consumable c
+                  JOIN bcp_sms4_items i ON c.item_id = i.item_id
+                  ORDER BY c.id DESC
+                ");
+                if ($consumables && $consumables->num_rows > 0):
+                    while ($row = $consumables->fetch_assoc()):
+                ?>
+                    <tr>
+                        <td><?= $row['id'] ?></td>
+                        <td><?= $row['item_name'] ?></td>
+                        <td><?= $row['category'] ?></td>
+                        <td><?= $row['unit'] ?></td>
+                        <td><?= $row['quantity'] ?></td>
+                        <td><?= $row['status'] ?></td>
+                        <td><?= $row['expiration'] ?></td>
+                        <td><?= $row['date_received'] ?></td>
+                    </tr>
+                <?php
+                    endwhile;
+                else:
+                ?>
+                    <tr><td colspan="8">No consumables found</td></tr>
+                <?php endif; ?>
+              </tbody>
+            </table>
+          </div>
 
             <!-- Assignments Table -->
             <div class="tab-pane fade" id="assignments" role="tabpanel">

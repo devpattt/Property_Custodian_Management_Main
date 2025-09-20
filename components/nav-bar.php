@@ -90,7 +90,6 @@ $userId = $_SESSION['user_id'] ?? 'N/A';
   </header>
 
   <?php
-    define("BASE_URL", "/Property_Custodian_Management/");
     $current_page = basename($_SERVER['PHP_SELF']);
   ?>
 

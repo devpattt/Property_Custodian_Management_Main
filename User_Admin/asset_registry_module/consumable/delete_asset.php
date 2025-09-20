@@ -3,10 +3,10 @@
 include "../../../connection.php";
 include "edit_modal.php";
 
-if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['asset_tag'])) {
-    $asset_tag = $_POST['asset_tag'];
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['property_tag'])) {
+    $property_tag = $_POST['property_tag'];
 
-    $sql = "DELETE FROM bcp_sms4_consumable WHERE asset_tag = ?";
+    $sql = "DELETE FROM bcp_sms4_consumable WHERE property_tag = ?";
     $stmt = $conn->prepare($sql);
     $stmt->bind_param("s", $asset_tag);
 

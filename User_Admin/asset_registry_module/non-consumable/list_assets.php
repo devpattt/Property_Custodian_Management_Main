@@ -17,7 +17,18 @@ if (isset($_GET['assign']) && $_GET['assign'] === 'true') {
     ];
 }
 
-$result = $conn->query("SELECT * FROM bcp_sms4_asset ORDER BY created_at DESC");
+$result = $conn->query("
+    SELECT 
+        a.property_tag,
+        a.item_id,
+        a.date_registered,
+        i.item_name,
+        i.category
+    FROM bcp_sms4_asset a
+    JOIN bcp_sms4_items i ON a.item_id = i.item_id
+    ORDER BY a.date_registered DESC
+");
+
 ?>
 <!DOCTYPE html>
 <html>
@@ -40,10 +51,6 @@ $result = $conn->query("SELECT * FROM bcp_sms4_asset ORDER BY created_at DESC");
                 <th>Tag</th>
                 <th>Name</th>
                 <th>Category</th>
-                <th>Quantity</th>
-                <th>Active</th>
-                <th>In Repair</th>
-                <th>Disposed</th>
                 <th data-type="date" data-format="YYYY/MM/DD">Date Added</th>
                 <th>Action</th>
               </tr>
@@ -51,27 +58,20 @@ $result = $conn->query("SELECT * FROM bcp_sms4_asset ORDER BY created_at DESC");
             <tbody>
               <?php while($row = $result->fetch_assoc()): ?>
                 <tr>
-                  <td><?= $row['asset_tag'] ?></td>
-                  <td><?= $row['name'] ?></td>
-                  <td><?= $row['category'] ?></td>
-                  <td><?= $row['quantity'] ?></td>
-                  <td><?= $row['active'] ?></td>
-                  <td><?= $row['in_repair'] ?></td>
-                  <td><?= $row['disposed'] ?></td>
-                  <td><?= $row['created_at'] ?></td>
+                  <td><?= $row['property_tag'] ?></td>
+                  <td><?= htmlspecialchars($row['item_name']) ?></td>
+                  <td><?= htmlspecialchars($row['category']) ?></td>
+                  <td><?= $row['date_registered'] ?></td>
                   <td style="display:flex; gap:8px;">
-                       <button type="button" class="btn btn-warning btn-sm"
-                          data-asset_tag="<?= $row['asset_tag'] ?>"
-                          data-active="<?= $row['active'] ?>"
-                          data-in_repair="<?= $row['in_repair'] ?>" 
-                          data-disposed="<?= $row['disposed'] ?>" 
-                          onclick="openEditModal(this)">
-                          Edit
-                      </button> 
-                      <form method="POST" action="delete_asset.php" style="margin:0;" onsubmit="return confirmDelete(this);">
-                          <input type="hidden" name="asset_tag" value="<?= $row['asset_tag'] ?>">
-                          <button type="submit"  class="btn btn-danger btn-sm">Drop</button>
-                      </form>
+                    <button type="button" class="btn btn-warning btn-sm"
+                      data-asset_tag="<?= $row['property_tag'] ?>"
+                      onclick="openEditModal(this)">
+                      Edit
+                    </button>
+                    <form method="POST" action="delete_asset.php" style="margin:0;" onsubmit="return confirmDelete(this);">
+                      <input type="hidden" name="asset_tag" value="<?= $row['property_tag'] ?>">
+                      <button type="submit" class="btn btn-danger btn-sm">Drop</button>
+                    </form>
                   </td>
                 </tr>
               <?php endwhile; ?>

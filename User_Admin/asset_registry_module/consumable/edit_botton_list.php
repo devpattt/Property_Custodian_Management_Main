@@ -12,7 +12,7 @@ include "edit_modal.php";
 <?php
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $asset_tag = $_POST['asset_tag'];
+    $asset_tag = $_POST['property_tag'];
     $box = (int)$_POST['box'];
     $quantity = (int)$_POST['quantity'];
     $expiration = $_POST['expiration'];

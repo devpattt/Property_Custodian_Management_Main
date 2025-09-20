@@ -1,24 +1,27 @@
 <?php
-include("../../../connection.php");
-include "edit_botton_list.php"; 
-include "get_rows.php"; 
-include "delete_asset.php"; 
+include "../../../connection.php";
+include "edit_botton_list.php"; // function edit button
+include "get_rows.php"; // to get $total_assets
+include "delete_asset.php"; // function delete button
 
-$showModal = false;
-$assignData = [];
-
-if (isset($_GET['assign']) && $_GET['assign'] === 'true') {
-    $showModal = true;
-    $assignData = [
-        'delivery_id' => $_GET['delivery_id'] ?? '',
-        'name' => $_GET['name'] ?? '',
-        'category' => $_GET['category'] ?? '',
-        'qty' => $_GET['qty'] ?? ''
-    ];
-}
-
-$result = $conn->query("SELECT * FROM bcp_sms4_consumable ORDER BY asset_tag DESC");
+// Fetch consumables + item details
+$result = $conn->query("
+    SELECT 
+        c.id,
+        c.item_id,
+        c.unit,
+        c.quantity,
+        c.status,
+        c.expiration,
+        c.date_received,
+        i.item_name,
+        i.category
+    FROM bcp_sms4_consumable c
+    JOIN bcp_sms4_items i ON c.item_id = i.item_id
+    ORDER BY c.id DESC
+");
 ?>
+
 <!DOCTYPE html>
 <html>
 <head>
@@ -37,13 +40,15 @@ $result = $conn->query("SELECT * FROM bcp_sms4_consumable ORDER BY asset_tag DES
       <div class="card">
         <div class="card-body">
          <!-- <h5 class="card-title">Asset Count/Box <?= $total_assets ?></h5>-->
+
+          <!-- Table with stripped rows -->
           <table class="table datatable">
             <thead>
               <tr>
-                <th>Tag</th>
-                <th>Name</th>
+                <th>Id</th>
+                <th>Item Name</th>
                 <th>Category</th>
-                <th>Box</th>
+                <th>Unit</th>
                 <th>Quantity</th>
                 <th>Expiration</th>
                 <th>Date Added</th>
@@ -51,32 +56,32 @@ $result = $conn->query("SELECT * FROM bcp_sms4_consumable ORDER BY asset_tag DES
               </tr>
             </thead>
             <tbody>
-              <?php while($row = $result->fetch_assoc()): ?>
-                <tr>
-                  <td><?= $row['asset_tag'] ?></td>
-                  <td><?= $row['name'] ?></td>
-                  <td><?= $row['category'] ?></td>
-                  <td><?= $row['box'] ?></td>
-                  <td><?= $row['quantity'] ?></td>
-                  <td><?= $row['expiration'] ?></td>
-                  <td><?= $row['add_date'] ?></td>
-                  <td style="display:flex; gap:8px;">
-                    <button type="button" class="btn btn-warning btn-sm"
-                      data-asset_tag="<?= $row['asset_tag'] ?>"
-                      data-box="<?= $row['box'] ?>"
-                      data-quantity="<?= $row['quantity'] ?>" 
-                      data-expiration="<?= $row['expiration'] ?>" 
-                      onclick="openEditModal(this)">
-                      Edit
-                    </button>
-                    <form method="POST" action="delete_asset.php" style="margin:0;" onsubmit="return confirmDelete(this);">
-                      <input type="hidden" name="asset_tag" value="<?= $row['asset_tag'] ?>">
-                      <button type="submit" class="btn btn-danger btn-sm">Drop</button>
-                    </form>
-                  </td>
-                </tr>
-              <?php endwhile; ?>
-            </tbody>
+            <?php while($row = $result->fetch_assoc()): ?>
+              <tr>
+                <td><?= $row['id'] ?></td>
+                <td><?= htmlspecialchars($row['item_name']) ?></td>
+                <td><?= htmlspecialchars($row['category']) ?></td>
+                <td><?= htmlspecialchars($row['unit']) ?></td>
+                <td><?= $row['quantity'] ?></td>
+                <td><?= $row['expiration'] ?? 'N/A' ?></td>
+                <td><?= $row['date_received'] ?></td>
+                <td style="display:flex; gap:8px;">
+                  <button type="button" class="btn btn-warning btn-sm"
+                    data-id="<?= $row['id'] ?>"
+                    data-item_id="<?= $row['item_id'] ?>"
+                    data-quantity="<?= $row['quantity'] ?>" 
+                    data-expiration="<?= $row['expiration'] ?>" 
+                    onclick="openEditModal(this)">
+                    Edit
+                  </button>
+                  <form method="POST" action="delete_asset.php" style="margin:0;" onsubmit="return confirmDelete(this);">
+                    <input type="hidden" name="id" value="<?= $row['id'] ?>">
+                    <button type="submit" class="btn btn-danger btn-sm">Drop</button>
+                  </form>
+                </td>
+              </tr>
+            <?php endwhile; ?>
+          </tbody>
           </table>
           <!-- End Table with stripped rows -->
 
@@ -101,35 +106,34 @@ $result = $conn->query("SELECT * FROM bcp_sms4_consumable ORDER BY asset_tag DES
      Note: The <em>Box</em> and <em>Quantity</em> fields are optional. Any incorrect entries can be corrected in the <b>List of School Consumable Assets section.</b>
     </p>
 
-<form method="POST" action="save_asset.php">
-  <div class="form-group">
-    <label for="name">Asset Name</label>
-    <input type="text" id="asset_name" name="name" value="<?= htmlspecialchars($assignData['name'] ?? '') ?>" required>
-  </div>
+    <form method="POST" action="save_asset.php">
+      <div class="form-group">
+        <label for="name">Asset Name</label>
+        <input type="text" id="name" name="name" required>
+      </div>
 
-  <div class="form-group">
-    <label for="category">Category</label>
-    <input type="text" id="asset_category" name="category" value="<?= htmlspecialchars($assignData['category'] ?? '') ?>" required>
-  </div>
+      <div class="form-group">
+        <label for="category">Category</label>
+        <input type="text" id="category" name="category" required>
+      </div>
 
-  <div class="form-group">
-    <label for="box">Box</label>
-    <input type="number" id="box" name="box" value="1">
-  </div>
+      <div class="form-group">
+        <label for="box">Box</label>
+        <input type="number" id="box" name="box">
+      </div>
 
-  <div class="form-group">
-    <label for="quantity">Quantity</label>
-    <input type="number" id="asset_quantity" name="quantity" value="<?= htmlspecialchars($assignData['qty'] ?? '') ?>" required>
-  </div>
+      <div class="form-group">
+        <label for="quantity">Quantity</label>
+        <input type="number" id="quantity" name="quantity">
+      </div>
 
-  <div class="form-group">
-    <label for="expiration">Expiration</label>
-    <input type="date" id="expiration" name="expiration" required>
-  </div>
+      <div class="form-group">
+        <label for="expiration">Expiration</label>
+        <input type="date" id="expiration" name="expiration" required>
+      </div>
 
-  <input type="hidden" name="delivery_id" value="<?= htmlspecialchars($assignData['delivery_id'] ?? '') ?>">
-  <button type="submit" class="btn-save">Save Asset</button>
-</form>
+      <button type="submit" class="btn-save">Save Asset</button>
+    </form>
   </div>
 </div>
 
@@ -168,16 +172,6 @@ function confirmDelete(form) {
 }
 </script>
 
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    <?php if ($showModal): ?>
-    const nextYear = new Date();
-    nextYear.setFullYear(nextYear.getFullYear() + 1);
-    document.getElementById('expiration').value = nextYear.toISOString().split('T')[0];
-    document.getElementById('registerAssetModal').style.display = 'block';
-    <?php endif; ?>
-});
-</script>
 
 <!-- Example confirm modal -->
 <div id="confirmModal" class="modal">

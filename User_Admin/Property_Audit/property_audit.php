@@ -181,7 +181,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $asset_tag = $assetRow ? $assetRow['asset_tag'] : ("ID-{$asset_id}");
                         $issue = ucfirst($condition) . ($remarks ? " - {$remarks}" : '');
 
-                        $exists = $conn->query("SELECT id FROM bcp_sms4_discrepancies WHERE asset_tag = '" . $conn->real_escape_string($asset_tag) . "' AND issue = '" . $conn->real_escape_string($issue) . "' AND resolved = 0");
+                        $exists = $conn->query("SELECT id FROM bcp_sms4_audit_discrepancies WHERE asset_tag = '" . $conn->real_escape_string($asset_tag) . "' AND issue = '" . $conn->real_escape_string($issue) . "' AND resolved = 0");
                         if (!$exists || $exists->num_rows == 0) {
                             $conn->query("INSERT INTO bcp_sms4_discrepancies (asset_tag, issue, resolved, created_at) VALUES ('" . $conn->real_escape_string($asset_tag) . "', '" . $conn->real_escape_string($issue) . "', 0, NOW())");
                         }
@@ -220,9 +220,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $consRow = $conn->query("SELECT asset_tag FROM bcp_sms4_consumable WHERE id = {$cons_id}")->fetch_assoc();
                         $asset_tag = $consRow ? $consRow['asset_tag'] : ("C-{$cons_id}");
                         $issue = ucfirst($condition) . ($remarks ? " - {$remarks}" : '');
-                        $exists = $conn->query("SELECT id FROM bcp_sms4_discrepancies WHERE asset_tag = '" . $conn->real_escape_string($asset_tag) . "' AND issue = '" . $conn->real_escape_string($issue) . "' AND resolved = 0");
+                        $exists = $conn->query("SELECT id FROM bcp_sms4_audit_discrepancies WHERE asset_tag = '" . $conn->real_escape_string($asset_tag) . "' AND issue = '" . $conn->real_escape_string($issue) . "' AND resolved = 0");
                         if (!$exists || $exists->num_rows == 0) {
-                            $conn->query("INSERT INTO bcp_sms4_discrepancies (asset_tag, issue, resolved, created_at) VALUES ('" . $conn->real_escape_string($asset_tag) . "', '" . $conn->real_escape_string($issue) . "', 0, NOW())");
+                            $conn->query("INSERT INTO bcp_sms4_audit_discrepancies (asset_tag, issue, resolved, created_at) VALUES ('" . $conn->real_escape_string($asset_tag) . "', '" . $conn->real_escape_string($issue) . "', 0, NOW())");
                         }
                     }
                 }
@@ -247,7 +247,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $upcoming_audits = $row['total'];
             }
             $last_discrepancies = 0;
-            $result = $conn->query("SELECT COUNT(*) as total FROM bcp_sms4_discrepancies WHERE resolved = 0");
+            $result = $conn->query("SELECT COUNT(*) as total FROM bcp_sms4_audit_discrepancies WHERE resolved = 0");
             if ($result && $row = $result->fetch_assoc()) {
                 $last_discrepancies = $row['total'];
             }
