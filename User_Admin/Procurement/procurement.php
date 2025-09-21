@@ -1,8 +1,6 @@
 <?php
 session_start();
-include_once '../../connection.php'; // adjust the path to your db connection file
-
-// Fetch deliveries from database
+include_once '../../connection.php'; 
 $query = "SELECT 
             p.procurement_id,
             i.item_name AS item,
@@ -26,7 +24,7 @@ if ($result && $result->num_rows > 0) {
         elseif (stripos($row['category'], 'cleaning') !== false) $icon = "🧹";
 
         $deliveries[] = [
-            "procurement_id" => $row['procurement_id'],  // add this
+            "procurement_id" => $row['procurement_id'],  
             "icon" => $icon,
             "item" => $row['item'],
             "category" => $row['category'],
