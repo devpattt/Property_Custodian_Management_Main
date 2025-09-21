@@ -82,7 +82,6 @@ if ($result && $result->num_rows > 0) {
     <div class="controls">
         <input type="text" id="search" placeholder="Search items...">
         <div>
-            <button onclick="toggleView()">Switch View</button>
             <button onclick="generateReport()">Generate Report</button>
         </div>
     </div>
