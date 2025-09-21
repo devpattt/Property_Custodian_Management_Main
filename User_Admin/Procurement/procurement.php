@@ -16,7 +16,7 @@ $result = $conn->query($query);
 $deliveries = [];
 if ($result && $result->num_rows > 0) {
     while ($row = $result->fetch_assoc()) {
-        $icon = "📦"; // default
+        $icon = "📦"; 
         if (stripos($row['category'], 'electronics') !== false) $icon = "💻";
         elseif (stripos($row['category'], 'furniture') !== false) $icon = "🪑";
         elseif (stripos($row['category'], 'consumables') !== false) $icon = "🎨";
