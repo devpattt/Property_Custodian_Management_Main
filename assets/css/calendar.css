@@ -1,0 +1,30 @@
+
+        .tooltip-box {
+          display: none;
+          position: absolute;
+          top: 100%; 
+          left: 50%;
+          transform: translateX(-50%);
+          background: #fff;
+          border: 1px solid #ddd;
+          border-radius: 8px;
+          padding: 8px 12px;
+          font-size: 12px;
+          width: 200px;
+          text-align: left;
+          z-index: 1000;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+          color: #000; 
+        }
+        .tooltip-box strong {
+          display: block;
+          margin-bottom: 4px;
+          font-size: 13px;
+          color: #000;  
+        }
+          .calendar-day {
+            position: relative;
+          }
+          .calendar-day:hover .tooltip-box {
+            display: block;
+          }
