@@ -67,7 +67,7 @@ session_start();
                 </div>
 
                 <div class="card-body">
-                  <h5 class="card-title">In Transit</h5>
+                  <h5 class="card-title">Pending Orders</h5>
 
                   <div class="d-flex align-items-center">
                     <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
@@ -100,7 +100,7 @@ session_start();
                 </div>
 
                 <div class="card-body">
-                  <h5 class="card-title">Stocks</h5>
+                  <h5 class="card-title">In Transit</h5>
 
                   <div class="d-flex align-items-center">
                     <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
