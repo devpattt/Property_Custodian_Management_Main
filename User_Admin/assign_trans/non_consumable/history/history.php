@@ -1,75 +1,194 @@
 <?php
-include "../../../connect/connection.php"; // process file
-include "get_rows.php"; // get total rows
-include "edit_button.php"; // to function edit button
-include "edit_modal.php";   // to show modal
+include "../../../../connection.php"; 
+include "get_rows.php"; 
+include "edit_button.php"; 
+include "edit_modal.php";   
 
-// 1. Delete rows with quantity = 0
+
 $conn->query("DELETE FROM bcp_sms4_assign_history WHERE quantity = 0");
 
-// 2. Fetch updated results
 $result = $conn->query("SELECT * FROM bcp_sms4_assign_history ORDER BY reference_no DESC");
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8">
-  <title>Custodian History</title>
+  <meta charset="utf-8">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport">
+  <title>Dashboard</title>
+  <meta content="" name="description">
+  <meta content="" name="keywords">
+  <link href="../../../../assets/img/bagong_silang_logo.png" rel="icon">
+  <link href="../../../../assets/img/apple-touch-icon.png" rel="apple-touch-icon">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
+  <link href="../../../../assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+  <link href="../../../../assets/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
+  <link href="../../../../assets/vendor/boxicons/css/boxicons.min.css" rel="stylesheet">
+  <link href="../../../../assets/vendor/quill/quill.snow.css" rel="stylesheet">
+  <link href="../../../../assets/vendor/quill/quill.bubble.css" rel="stylesheet">
+  <link href="../../../../assets/vendor/remixicon/remixicon.css" rel="stylesheet">
+  <link href="../../../../assets/vendor/simple-datatables/style.css" rel="stylesheet">
+  <link href="../../../../assets/css/style.css" rel="stylesheet">
+  <link href="../../../../assets/css/schedule_maintenance.css" rel="stylesheet">
   <link rel="stylesheet" href="../../../../css/table_size.css">
   <link rel="stylesheet" href="../../../../css/asset_reg/list_assets.css">
-  <script src="../../../../js/assign_trans/history/history.js"></script>
-  <script src="../../../../js/assign_trans/non_consumable/history.js"></script>
+  <script src="../../../../assets/js/assign_trans/history/history.js"></script>
+  <script src="../../../../assets/js/assign_trans/non_consumable/history.js"></script>
 </head>
-<body>
-  <div class="container">
-    <h2>Active Non-Consumable Custodian's Assigned</h2>
-    <input type="text" id="search" placeholder="Search..." onkeyup="searchTable()">
-    <div class="card">
-         <h2><?= $total_assets ?> Total Rows</h2>
-    </div>
-    <p>Note: If the value of the <b>Quantity</b> reach 0, that row will automatically be deleted.</p>
 
-    <table>
-      <thead>
-        <tr>
-          <th>Reference No</th>
-          <th>Equipment ID</th>
-          <th>Equipment Name</th>
-          <th>Quantity</th>
-          <th>Custodian ID</th>
-          <th>Custodian Name</th>
-          <th>Department</th>
-          <th>Assigned Date</th>
-          <th>Remarks</th>
-          <th>Assigned By</th>
-          <th>Action</th>
-        </tr>
-      </thead>
-      <tbody>
-        <?php while($row = $result->fetch_assoc()): ?>
-          <tr>
-            <td><?= $row['reference_no'] ?></td>
-            <td><?= $row['equipment_id'] ?></td>
-            <td><?= $row['equipment_name'] ?></td>
-            <td><?= $row['quantity'] ?></td>
-            <td><?= $row['custodian_id'] ?></td>
-            <td><?= $row['custodian_name'] ?></td>
-            <td><?= $row['department_code'] ?></td>
-            <td><?= $row['assigned_date'] ?></td>
-            <td><?= $row['remarks'] ?></td>
-            <td><?= $row['assigned_by'] ?></td>
-            <td style="display:flex; gap:8px;">
-              <button type="button" class="btn_table"
-                data-reference_no="<?= $row['reference_no'] ?>"
-                data-quantity="<?= $row['quantity'] ?>" 
-                onclick="openEditModal(this)">
-                Edit
-              </button>
-            </td>
-          </tr>
-        <?php endwhile; ?>
-      </tbody>
-    </table>
+<body>
+  <?php
+    include '../../../../components/nav-bar.php'
+  ?>
+
+  <main id="main" class="main">
+
+    <div class="pagetitle">
+      <h1>Property Issuance and Acknowledgement</h1>
+      <nav>
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item"><a href="<?=BASE_URL?>User_Admin/dashboard.php">Home</a></li>
+          <li class="breadcrumb-item">Property Issuance and Acknowledgement</li>
+          <li class="breadcrumb-item active">Non-Consumable</li>
+        </ol>
+      </nav>
+    </div>
+
+    <?php
+    $host = 'localhost';
+    $dbname = 'bcp_sms4_pcm';
+    $username = 'root'; 
+    $password = ''; 
+
+    try {
+        $pdo = new PDO("mysql:host=$host;dbname=$dbname", $username, $password);
+        $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+        $stmt = $pdo->query("SELECT asset, type, frequency, personnel, start_date FROM bcp_sms4_scheduling ORDER BY start_date DESC");
+        $schedules = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        foreach ($schedules as &$schedule) {
+            $startDate = new DateTime($schedule['start_date']);
+            $today = new DateTime();
+            if ($startDate > $today) {
+                $schedule['status'] = 'Scheduled';
+            } elseif ($startDate <= $today) {
+                $daysDiff = $today->diff($startDate)->days;
+                if ($daysDiff > 7) {
+                    $schedule['status'] = 'Completed';
+                } else {
+                    $schedule['status'] = 'In Progress';
+                }
+            }
+        }
+        
+    } catch(PDOException $e) {
+        echo "Connection failed: " . $e->getMessage();
+        $schedules = []; 
+    }
+    ?>
+<section class="section">
+  <div class="row">
+    <div class="col-lg-12">
+      <div class="card">
+        <div class="card-body">
+          <br>
+          <p>
+            <em>
+              Below is a list of all active custodians and their assigned non-consumable equipment.  
+              You can <b>search, sort, and filter</b> the records to quickly find details  
+              about custodians, departments, or equipment.  
+              <br>Note: If the value of <b>Quantity</b> reaches 0, that row will automatically be deleted.
+            </em>
+          </p>
+          <table class="table datatable">
+            <thead>
+              <tr>
+                <th>Reference No</th>
+                <th>Equipment ID</th>
+                <th>Equipment Name</th>
+                <th>Quantity</th>
+                <th>Custodian ID</th>
+                <th>Custodian Name</th>
+                <th>Department</th>
+                <th data-type="date" data-format="YYYY/MM/DD">Assigned Date</th>
+                <th>Remarks</th>
+                <th>Assigned By</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              <?php while($row = $result->fetch_assoc()): ?>
+              <tr>
+                <td><?= htmlspecialchars($row['reference_no']) ?></td>
+                <td><?= htmlspecialchars($row['equipment_id']) ?></td>
+                <td><?= htmlspecialchars($row['equipment_name']) ?></td>
+                <td><?= htmlspecialchars($row['quantity']) ?></td>
+                <td><?= htmlspecialchars($row['custodian_id']) ?></td>
+                <td><?= htmlspecialchars($row['custodian_name']) ?></td>
+                <td><?= htmlspecialchars($row['department_code']) ?></td>
+                <td><?= date('Y/m/d', strtotime($row['assigned_date'])) ?></td>
+                <td><?= htmlspecialchars($row['remarks']) ?></td>
+                <td><?= htmlspecialchars($row['assigned_by']) ?></td>
+                <td>
+                  <button type="button" 
+                          class="btn btn-sm btn-primary"
+                          data-reference_no="<?= $row['reference_no'] ?>"
+                          data-quantity="<?= $row['quantity'] ?>" 
+                          onclick="openEditModal(this)">
+                    Edit
+                  </button>
+                </td>
+              </tr>
+              <?php endwhile; ?>
+            </tbody>
+          </table>
+
+        </div>
+      </div>
+    </div>
   </div>
-</body>
+</section>
+
+
+
+    <script>
+    $(document).ready(function() {
+        if (!$.fn.DataTable.isDataTable('.datatable')) {
+            $('.datatable').DataTable({
+                "pageLength": 10,
+                "lengthChange": true,
+                "searching": true,
+                "ordering": true,
+                "info": true,
+                "autoWidth": false,
+                "responsive": true,
+                "columnDefs": [
+                    {
+                        "targets": 4, 
+                        "type": "date"
+                    },
+                    {
+                        "targets": 5, 
+                        "orderable": true
+                    }
+                ]
+            });
+        }
+    });
+    </script>
+  </main>
+
+  <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
+  <script src="../../../../assets/vendor/apexcharts/apexcharts.min.js"></script>
+  <script src="../../../../assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <script src="../../../../assets/vendor/chart.js/chart.umd.js"></script>
+  <script src="../../../../assets/vendor/echarts/echarts.min.js"></script>
+  <script src="../../../../assets/vendor/quill/quill.js"></script>
+  <script src="../../../../assets/vendor/simple-datatables/simple-datatables.js"></script>
+  <script src="../../../../assets/vendor/tinymce/tinymce.min.js"></script>
+  <script src="../../../../assets/vendor/php-email-form/validate.js"></script>
+  <script src="../../../../assets/js/main.js"></script>
+  </body>
 </html>

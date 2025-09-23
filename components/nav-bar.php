@@ -168,7 +168,7 @@ $userId = $_SESSION['user_id'] ?? 'N/A';
             
           <!-- Property Issuance & Acknowledgment -->
           <?php 
-            $issuance_pages = ['forms-elements.html','forms-layouts.html','forms-editors.html','forms-validation.html']; 
+            $issuance_pages = ['history.php','active.php']; 
             $is_issuance_active = in_array($current_page, $issuance_pages);
           ?>
           <li class="nav-item">
@@ -179,24 +179,14 @@ $userId = $_SESSION['user_id'] ?? 'N/A';
               <i class="bi bi-chevron-down ms-auto"></i>
             </a>
             <ul id="forms-nav" class="nav-content collapse <?= $is_issuance_active ? 'show' : '' ?>" data-bs-parent="#sidebar-nav">
-              <li>
-                <a href="forms-elements.html" class="<?= $current_page == 'forms-elements.html' ? 'active' : '' ?>">
-                  <i class="bi bi-circle"></i><span>Form Elements</span>
+               <li>
+                <a href="<?=BASE_URL?>User_Admin/assign_trans/consumable/active_table/active.php" class="<?= $current_page == 'active.php' ? 'active' : '' ?>">
+                  <i class="bi bi-circle"></i><span>Consumable</span>
                 </a>
               </li>
               <li>
-                <a href="forms-layouts.html" class="<?= $current_page == 'forms-layouts.html' ? 'active' : '' ?>">
-                  <i class="bi bi-circle"></i><span>Form Layouts</span>
-                </a>
-              </li>
-              <li>
-                <a href="forms-editors.html" class="<?= $current_page == 'forms-editors.html' ? 'active' : '' ?>">
-                  <i class="bi bi-circle"></i><span>Form Editors</span>
-                </a>
-              </li>
-              <li>
-                <a href="forms-validation.html" class="<?= $current_page == 'forms-validation.html' ? 'active' : '' ?>">
-                  <i class="bi bi-circle"></i><span>Form Validation</span>
+                <a href="<?=BASE_URL?>User_Admin/assign_trans/non_consumable/history/history.php" class="<?= $current_page == 'history.php' ? 'active' : '' ?>">
+                  <i class="bi bi-circle"></i><span>Non-Consumable</span>
                 </a>
               </li>
             </ul>
@@ -217,17 +207,12 @@ $userId = $_SESSION['user_id'] ?? 'N/A';
             <ul id="charts-nav" class="nav-content collapse <?= $is_custodian_active ? 'show' : '' ?>" data-bs-parent="#sidebar-nav">
               <li>
                 <a href="charts-chartjs.html" class="<?= $current_page == 'charts-chartjs.html' ? 'active' : '' ?>">
-                  <i class="bi bi-circle"></i><span>Chart.js</span>
+                  <i class="bi bi-circle"></i><span>Asset Assignment</span>
                 </a>
               </li>
               <li>
                 <a href="charts-apexcharts.html" class="<?= $current_page == 'charts-apexcharts.html' ? 'active' : '' ?>">
-                  <i class="bi bi-circle"></i><span>ApexCharts</span>
-                </a>
-              </li>
-              <li>
-                <a href="charts-echarts.html" class="<?= $current_page == 'charts-echarts.html' ? 'active' : '' ?>">
-                  <i class="bi bi-circle"></i><span>ECharts</span>
+                  <i class="bi bi-circle"></i><span>Asset Transfer</span>
                 </a>
               </li>
             </ul>
