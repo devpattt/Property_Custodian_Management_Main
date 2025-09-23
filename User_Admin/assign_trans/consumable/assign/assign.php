@@ -1,109 +1,199 @@
-<?php
-?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <title>Assign Equipment</title>
-  <link rel="stylesheet" href="../../../../css/assign_trans/assign/assign_trans.css">
-  <link rel="stylesheet" href="../../../../css/assign_trans/assign/modal.css">
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
   <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
   <script src="/CustodianManagement/js/auto_suggest/assign_trans/non_consumable/search_user.js"></script>
   <script src="/CustodianManagement/js/auto_suggest/assign_trans/consumable/search_asset.js"></script>
   <link rel="stylesheet" href="../../../../css/auto_suggest/auto_suggest.css">
+
 </head>
+<style>
+    /* Make the modal wider */
+    #assignModal .modal-dialog {
+      max-width: 900px;
+    }
+
+    /* Align form text to the left and make labels bold */
+    #assignModal .assign-form label {
+      text-align: left;
+      font-weight: 500;
+      display: block;
+      margin-bottom: 0.25rem;
+    }
+
+    /* Make inputs fill their column nicely */
+    #assignModal .assign-form .form-control {
+      width: 100%;
+      margin-bottom: 1rem;
+    }
+
+    /* Adjust spacing between form fields */
+    #assignModal .assign-form .col-md-6 {
+      display: flex;
+      flex-direction: column;
+      padding: 0 15px;
+    }
+
+    /* Better textarea sizing */
+    #assignModal .assign-form textarea {
+      resize: vertical;
+      min-height: 80px;
+    }
+
+    /* Button styling */
+    .btn-submit {
+      min-width: 150px;
+    }
+
+    /* Modal header improvements */
+    .modal-header {
+      border-bottom: 2px solid #dee2e6;
+    }
+
+    .modal-title {
+      font-weight: 600;
+    }
+  </style>
+
 <body>
-  <div class="container">
-    <h2>Assign Equipment</h2>
-    <form action="assign_process.php" method="POST">
-      <label>Item Name:</label>
-      <input type="text" id="equipmentName" name="equipment_name" placeholder="Enter Item Name" required>
 
-      <label>Item Tag:</label>
-      <input type="text" id="equipmentId" name="equipment_id" placeholder="Enter Item Tag" required>
+<div class="modal fade" id="assignModal" tabindex="-1" aria-labelledby="assignModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="assignModalLabel">Assign Equipment</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form action="assign_process.php" method="POST" class="row g-3 assign-form">
 
-      <label>Item Category:</label>
-      <input type="text" id="equipmentCategory" name="equipmentCategory" placeholder="Auto filled Category">
+          <!-- Left Column -->
+          <div class="col-md-6">
+            <label>Item Name:</label>
+            <input type="text" class="form-control mb-2" name="equipment_name" required>
 
-      <label>Expiration:</label>
-      <input type="text" id="expiration" name="expiration" placeholder="Auto filled Expiration">
+            <label>Item Tag:</label>
+            <input type="text" class="form-control mb-2" name="equipment_id" required>
 
-      <label>Box:</label>
-      <input type="number" name="box" placeholder="Enter box quantity" min="0">
+            <label>Item Category:</label>
+            <input type="text" class="form-control mb-2" name="equipmentCategory" readonly>
 
-      <label>Quantity:</label>
-      <input type="number" name="quantity" placeholder="Enter Quantity" min="0">
+            <label>Expiration:</label>
+            <input type="text" class="form-control mb-2" name="expiration" readonly>
 
-      <label>Name:</label>
-      <input type="text" id="userName" name="name" placeholder="Enter Name">
+            <label>Box:</label>
+            <input type="number" class="form-control mb-2" name="box" min="0">
+          </div>
 
-      <label>Employee ID:</label>
-      <input type="text" id="userId" name="user_id" placeholder="Enter Employee ID">
+          <!-- Right Column -->
+          <div class="col-md-6">
+            <label>Quantity:</label>
+            <input type="number" class="form-control mb-2" name="quantity" min="0">
 
-      <label>Department:</label>
-      <input type="text" id="userDept" name="department" placeholder="Enter Department">
+            <label>Name:</label>
+            <input type="text" class="form-control mb-2" name="name">
 
-      <label>Remarks:</label>
-      <textarea name="remarks"></textarea>
+            <label>Employee ID:</label>
+            <input type="text" class="form-control mb-2" name="user_id">
 
-      <button type="submit">Assign Equipment</button>
-    </form>
+            <label>Department:</label>
+            <input type="text" class="form-control mb-2" name="department">
+
+            <label>Remarks:</label>
+            <textarea class="form-control mb-3" name="remarks"></textarea>
+          </div>
+
+          <div class="col-12 text-center">
+            <button type="submit" class="btn btn-primary px-4">Assign Equipment</button>
+          </div>
+        </form>
+      </div>
+    </div>
   </div>
+</div>
 
-  <!-- Success Modal -->
-<div id="successModal" class="modal">
-  <div class="modal-content">
-    <h3>Assign Successfully!</h3>
-    <p>Reference: <strong id="reference_no"></strong></p>
-    <button class="close-btn" onclick="closeModal('successModal')">OK</button>
+
+<!-- Success Modal -->
+<div class="modal fade" id="successModal" tabindex="-1" aria-labelledby="successModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-md">
+    <div class="modal-content">
+      <div class="modal-header bg-success text-white">
+        <h5 class="modal-title" id="successModalLabel">Assign Successfully!</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p>Reference: <strong id="reference_no"></strong></p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-success" data-bs-dismiss="modal">OK</button>
+      </div>
+    </div>
   </div>
 </div>
 
 <!-- Merge Modal -->
-<div id="mergeModal" class="modal">
-  <div class="modal-content">
-    <h3>Assignment Merged!</h3>
-    <p>Quantity has been updated for custodian.</p>
-    <p>Reference: <strong id="reference_no_merge"></strong></p>
-    <button class="close-btn" onclick="closeModal('mergeModal')">OK</button>
+<div class="modal fade" id="mergeModal" tabindex="-1" aria-labelledby="mergeModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-md">
+    <div class="modal-content">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title" id="mergeModalLabel">Assignment Merged!</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p>Quantity has been updated for custodian.</p>
+        <p>Reference: <strong id="reference_no_merge"></strong></p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">OK</button>
+      </div>
+    </div>
   </div>
 </div>
 
 <!-- Error Modal -->
-<div id="errorModal" class="modal">
-  <div class="modal-content error">
-    <h3>Error</h3>
-    <p id="error_msg"></p>
-    <button class="close-btn" onclick="closeModal('errorModal')">OK</button>
+<div class="modal fade" id="errorModal" tabindex="-1" aria-labelledby="errorModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-md">
+    <div class="modal-content">
+      <div class="modal-header bg-danger text-white">
+        <h5 class="modal-title" id="errorModalLabel">Error</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p id="error_msg"></p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-danger" data-bs-dismiss="modal">OK</button>
+      </div>
+    </div>
   </div>
 </div>
 
+
 <script>
-  function closeModal(id) {
-    document.getElementById(id).style.display = "none";
-    window.history.replaceState({}, document.title, "assign.php");
-  }
+  document.addEventListener("DOMContentLoaded", function () {
 
-  // ✅ Success check
-  <?php if (isset($_GET['success']) && isset($_GET['reference'])): ?>
-    document.getElementById("reference_no").textContent = "<?= $_GET['reference'] ?>";
-    document.getElementById("successModal").style.display = "block";
-  <?php endif; ?>
+    <?php if (isset($_GET['success']) && isset($_GET['reference'])): ?>
+      document.getElementById("reference_no").textContent = "<?= $_GET['reference'] ?>";
+      new bootstrap.Modal(document.getElementById("successModal")).show();
+    <?php endif; ?>
 
-  // ✅ Merge check
-  <?php if (isset($_GET['merge']) && isset($_GET['reference'])): ?>
-    document.getElementById("reference_no_merge").textContent = "<?= $_GET['reference'] ?>";
-    document.getElementById("mergeModal").style.display = "block";
-  <?php endif; ?>
+    <?php if (isset($_GET['merge']) && isset($_GET['reference'])): ?>
+      document.getElementById("reference_no_merge").textContent = "<?= $_GET['reference'] ?>";
+      new bootstrap.Modal(document.getElementById("mergeModal")).show();
+    <?php endif; ?>
 
-  // ❌ Error check
-  <?php if (isset($_GET['error']) && isset($_GET['msg'])): ?>
-    document.getElementById("error_msg").textContent = "<?= htmlspecialchars($_GET['msg']) ?>";
-    document.getElementById("errorModal").style.display = "block";
-  <?php endif; ?>
+    <?php if (isset($_GET['error']) && isset($_GET['msg'])): ?>
+      document.getElementById("error_msg").textContent = "<?= htmlspecialchars($_GET['msg']) ?>";
+      new bootstrap.Modal(document.getElementById("errorModal")).show();
+    <?php endif; ?>
+  });
 </script>
+
 
 </body>
 </html>

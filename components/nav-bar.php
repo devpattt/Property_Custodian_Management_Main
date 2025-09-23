@@ -201,13 +201,13 @@ $userId = $_SESSION['user_id'] ?? 'N/A';
             <a class="nav-link collapsed <?= $is_custodian_active ? 'active' : '' ?>" 
               data-bs-target="#charts-nav" data-bs-toggle="collapse" href="#">
               <i class="bi bi-bar-chart"></i>
-              <span>Custodian Assignment & Transfer</span>
+              <span>Custodian History & Transfer</span>
               <i class="bi bi-chevron-down ms-auto"></i>
             </a>
             <ul id="charts-nav" class="nav-content collapse <?= $is_custodian_active ? 'show' : '' ?>" data-bs-parent="#sidebar-nav">
               <li>
                 <a href="charts-chartjs.html" class="<?= $current_page == 'charts-chartjs.html' ? 'active' : '' ?>">
-                  <i class="bi bi-circle"></i><span>Asset Assignment</span>
+                  <i class="bi bi-circle"></i><span>Custodian History</span>
                 </a>
               </li>
               <li>

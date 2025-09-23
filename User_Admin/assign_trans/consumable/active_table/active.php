@@ -33,14 +33,15 @@ $result = $conn->query("SELECT * FROM bcp_sms4_assign_consumable ORDER BY refere
   <link href="../../../../assets/css/style.css" rel="stylesheet">
   <link href="../../../../assets/css/schedule_maintenance.css" rel="stylesheet">
   <link rel="stylesheet" href="../../../../css/table_size.css">
+  <link rel="stylesheet" href="../../../../asset/css/assign_modal.css">
   <link rel="stylesheet" href="../../../../css/asset_reg/list_assets.css">
   <script src="../../../../assets/js/assign_trans/history/history.js"></script>
   <script src="../../../../assets/js/assign_trans/consumable/active.js"></script>
-</head>
 
 <body>
   <?php
-    include '../../../../components/nav-bar.php'
+    include '../../../../components/nav-bar.php';
+    include __DIR__ . '/../assign/assign.php';
   ?>
 
   <main id="main" class="main">
@@ -56,42 +57,10 @@ $result = $conn->query("SELECT * FROM bcp_sms4_assign_consumable ORDER BY refere
       </nav>
     </div>
 
-    <?php
-    $host = 'localhost';
-    $dbname = 'bcp_sms4_pcm';
-    $username = 'root'; 
-    $password = ''; 
-
-    try {
-        $pdo = new PDO("mysql:host=$host;dbname=$dbname", $username, $password);
-        $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-        $stmt = $pdo->query("SELECT asset, type, frequency, personnel, start_date FROM bcp_sms4_scheduling ORDER BY start_date DESC");
-        $schedules = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        foreach ($schedules as &$schedule) {
-            $startDate = new DateTime($schedule['start_date']);
-            $today = new DateTime();
-            if ($startDate > $today) {
-                $schedule['status'] = 'Scheduled';
-            } elseif ($startDate <= $today) {
-                $daysDiff = $today->diff($startDate)->days;
-                if ($daysDiff > 7) {
-                    $schedule['status'] = 'Completed';
-                } else {
-                    $schedule['status'] = 'In Progress';
-                }
-            }
-        }
-        
-    } catch(PDOException $e) {
-        echo "Connection failed: " . $e->getMessage();
-        $schedules = []; 
-    }
-    ?>
-
         <section class="section">
-        <div class="row">
+         <div class="row">
             <div class="col-lg-12">
-            <div class="card">
+              <div class="card">
                 <div class="card-body">
                          <br>
                 <p>
@@ -102,7 +71,12 @@ $result = $conn->query("SELECT * FROM bcp_sms4_assign_consumable ORDER BY refere
                     Note: If both <b>Box</b> and <b>Quantity</b> reach 0, the row will automatically be deleted.
                     </em>
                 </p>
-                <table class="table datatable">
+                <table id="activeTable" class="table datatable">
+                  <div class="d-flex justify-content-start mb-3">
+                      <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#assignModal">
+                        <i class="bi bi-plus-circle"></i> Assign Asset
+                      </button>
+                    </div>
                     <thead>
                     <tr>
                         <th>Reference No</th>
@@ -156,6 +130,25 @@ $result = $conn->query("SELECT * FROM bcp_sms4_assign_consumable ORDER BY refere
         </div>
         </section>
 
+
+      <script>
+      $(document).ready(function() {
+        $('#activeTable').DataTable({
+          dom: '<"top d-flex justify-content-between"l>rt<"bottom d-flex justify-content-between"ip>', 
+          initComplete: function() {
+            $('div.dataTables_length').after(`
+              <div class="ms-3">
+                <button type="button" class="btn btn-success" 
+                  data-bs-toggle="modal" 
+                  data-bs-target="#assignModal">
+                  <i class="bi bi-plus-circle"></i> Assign Asset
+                </button>
+              </div>
+            `);
+          }
+        });
+      });
+      </script>
 
     <script>
     $(document).ready(function() {
