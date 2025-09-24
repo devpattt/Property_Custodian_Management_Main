@@ -3,11 +3,31 @@ session_start();
 include '../connection.php';  
 
 $custodian_id = $_SESSION['user_id'];
-$stmt = $conn->prepare("SELECT r.id, u.username AS teacher, r.asset, r.description, r.report_type, r.status, r.date_reported FROM bcp_sms4_reports r JOIN bcp_sms4_admins u ON r.reported_by = u.id WHERE r.assigned_to = ? AND (r.status = 'In-Progress') ORDER BY r.date_reported DESC");
+
+$stmt = $conn->prepare("
+    SELECT r.id, 
+           u.username AS teacher, 
+           r.report_type, 
+           r.description, 
+           r.status, 
+           r.date_reported,
+           a.property_tag,
+           i.item_name AS asset_item_name,
+           ic.item_name AS consumable_item_name
+    FROM bcp_sms4_reports r
+    JOIN bcp_sms4_admins u ON r.reported_by = u.id
+    LEFT JOIN bcp_sms4_asset a ON r.asset_id = a.asset_id
+    LEFT JOIN bcp_sms4_items i ON a.item_id = i.item_id
+    LEFT JOIN bcp_sms4_consumable c ON r.id = c.id
+    LEFT JOIN bcp_sms4_items ic ON c.item_id = ic.item_id
+    WHERE r.assigned_to = ? AND r.status = 'In-Progress'
+    ORDER BY r.date_reported DESC
+");
 $stmt->bind_param("i", $custodian_id);
 $stmt->execute();
 $result = $stmt->get_result();
 ?>
+
 
 <!DOCTYPE html>
 <html lang="en">
@@ -71,36 +91,46 @@ $result = $stmt->get_result();
                     <th>Action</th>
                   </tr>
                 </thead>
-                <tbody>
-                  <?php while ($row = $result->fetch_assoc()):?>
-                  <tr>
-                    <td><?= $row['id']?></td>
-                    <td><?= htmlspecialchars($row['teacher'])?></td>
-                    <td><?= htmlspecialchars($row['asset'])?></td>
-                    <td><?= ucfirst($row['report_type'])?></td>
-                    <td>
-                      <?php if ($row['status'] == 'pending'): ?>
-                        <span class="badge bg-warning text-dark"><?= ucfirst($row['status'])?></span>
-                      <?php elseif ($row['status'] == 'approved'): ?>
-                        <span class="badge bg-success"><?= ucfirst($row['status'])?></span>
-                      <?php else: ?>
-                        <span class="badge bg-secondary"><?= ucfirst($row['status'])?></span>
-                      <?php endif; ?>
-                    </td>
-                    <td><?= $row['date_reported']?></td>
-                    <td>
-                      <button 
-                        type="button" 
-                        class="btn btn-sm btn-primary update-btn" 
-                        data-id="<?= $row['id']?>"
-                        data-bs-toggle="modal" 
-                        data-bs-target="#updateModal">
-                        Update
-                      </button>
-                    </td>
-                  </tr>
-                  <?php endwhile; ?>
-                </tbody>
+              <tbody>
+  <?php while ($row = $result->fetch_assoc()): ?>
+  <tr>
+    <td><?= $row['id'] ?></td>
+    <td><?= htmlspecialchars($row['teacher']) ?></td>
+ <td>
+  <?php if ($row['property_tag']): ?>
+    <?= htmlspecialchars($row['property_tag']) ?> - <?= htmlspecialchars($row['asset_item_name']) ?>
+  <?php elseif ($row['consumable_item_name']): ?>
+    <?= htmlspecialchars($row['consumable_item_name']) ?>
+  <?php else: ?>
+    <em>Unknown Item</em>
+  <?php endif; ?>
+</td>
+
+    <td><?= ucfirst($row['report_type']) ?></td>
+    <td>
+      <?php if ($row['status'] == 'pending'): ?>
+        <span class="badge bg-warning text-dark"><?= ucfirst($row['status']) ?></span>
+      <?php elseif ($row['status'] == 'approved'): ?>
+        <span class="badge bg-success"><?= ucfirst($row['status']) ?></span>
+      <?php else: ?>
+        <span class="badge bg-secondary"><?= ucfirst($row['status']) ?></span>
+      <?php endif; ?>
+    </td>
+    <td><?= $row['date_reported'] ?></td>
+    <td>
+      <button 
+        type="button" 
+        class="btn btn-sm btn-primary update-btn" 
+        data-id="<?= $row['id']?>"
+        data-bs-toggle="modal" 
+        data-bs-target="#updateModal">
+        Update
+      </button>
+    </td>
+  </tr>
+  <?php endwhile; ?>
+</tbody>
+
               </table>
             </div>
           </div>

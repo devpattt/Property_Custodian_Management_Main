@@ -1,5 +1,5 @@
 <?php
-include '../connection.php';
+include '../../connection.php';
 
 $filter = $_GET['filter'] ?? 'month'; 
 

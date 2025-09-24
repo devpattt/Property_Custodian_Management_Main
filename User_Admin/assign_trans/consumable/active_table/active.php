@@ -1,12 +1,28 @@
 <?php
+session_start();
 include "../../../../connection.php"; 
-include "get_rows.php"; 
-include "edit_button.php"; 
-include "edit_modal.php";   
+// include "get_rows.php"; 
+// include "edit_button.php"; 
+// include "edit_modal.php";   
 
-$conn->query("DELETE FROM bcp_sms4_assign_consumable WHERE box = 0 AND quantity = 0");
-
-$result = $conn->query("SELECT * FROM bcp_sms4_assign_consumable ORDER BY reference_no DESC");
+$query = "
+    SELECT 
+        i.id,
+        i.reference_no,
+        i.item_name,
+        i.category,
+        i.quantity,
+        i.assigned_date,
+        i.end_date,
+        i.remarks,
+        t.fullname AS teacher_name,
+        a.fullname AS admin_name
+    FROM bcp_sms4_issuance i
+    JOIN bcp_sms4_admins t ON i.teacher_id = t.id
+    JOIN bcp_sms4_admins a ON i.issued_by = a.id
+    ORDER BY i.assigned_date DESC
+";
+$result = $conn->query($query);
 ?>
 
 <!DOCTYPE html>
@@ -41,7 +57,6 @@ $result = $conn->query("SELECT * FROM bcp_sms4_assign_consumable ORDER BY refere
 <body>
   <?php
     include '../../../../components/nav-bar.php';
-    include __DIR__ . '/../assign/assign.php';
   ?>
 
   <main id="main" class="main">
@@ -71,59 +86,42 @@ $result = $conn->query("SELECT * FROM bcp_sms4_assign_consumable ORDER BY refere
                     Note: If both <b>Box</b> and <b>Quantity</b> reach 0, the row will automatically be deleted.
                     </em>
                 </p>
-                <table id="activeTable" class="table datatable">
-                  <div class="d-flex justify-content-start mb-3">
-                      <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#assignModal">
-                        <i class="bi bi-plus-circle"></i> Assign Asset
-                      </button>
-                    </div>
-                    <thead>
-                    <tr>
-                        <th>Reference No</th>
-                        <th>Equipment ID</th>
-                        <th>Equipment Name</th>
-                        <th>Box</th>
-                        <th>Quantity</th>
-                        <th data-type="date" data-format="YYYY/MM/DD">Expiration Date</th>
-                        <th>Custodian ID</th>
-                        <th>Custodian Name</th>
-                        <th>Department</th>
-                        <th data-type="date" data-format="YYYY/MM/DD">Assigned Date</th>
-                        <th>Remarks</th>
-                        <th>Assigned By</th>
-                        <th>Action</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    <?php while($row = $result->fetch_assoc()): ?>
+                <div class="d-flex justify-content-between align-items-center mb-3">
+    <h5 class="mb-0">Active Custodians and Assigned Equipment</h5>
+</div>
+
+<div class="table-responsive">
+    <table class="table table-bordered table-striped">
+            <thead class="table-dark">
+                <tr>
+                    <th>Reference No</th>
+                    <th>Item</th>
+                    <th>Category</th>
+                    <th>Quantity</th>
+                    <th>Teacher</th>
+                    <th>Issued By</th>
+                    <th>Issued Date</th>
+                    <th>Return Date</th>
+                    <th>Remarks</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php while($row = $result->fetch_assoc()) { ?>
                     <tr>
                         <td><?= htmlspecialchars($row['reference_no']) ?></td>
-                        <td><?= htmlspecialchars($row['equipment_id']) ?></td>
-                        <td><?= htmlspecialchars($row['equipment_name']) ?></td>
-                        <td><?= htmlspecialchars($row['box']) ?></td>
+                        <td><?= htmlspecialchars($row['item_name']) ?></td>
+                        <td><?= htmlspecialchars($row['category']) ?></td>
                         <td><?= htmlspecialchars($row['quantity']) ?></td>
-                        <td><?= date('Y/m/d', strtotime($row['expiration'])) ?></td>
-                        <td><?= htmlspecialchars($row['custodian_id']) ?></td>
-                        <td><?= htmlspecialchars($row['custodian_name']) ?></td>
-                        <td><?= htmlspecialchars($row['department_code']) ?></td>
-                        <td><?= date('Y/m/d', strtotime($row['assigned_date'])) ?></td>
-                        <td><?= htmlspecialchars($row['remarks']) ?></td>
-                        <td><?= htmlspecialchars($row['assigned_by']) ?></td>
-                        <td>
-                        <button type="button" class="btn btn-sm btn-primary"
-                            data-reference_no="<?= $row['reference_no'] ?>"
-                            data-box="<?= $row['box'] ?>"
-                            data-quantity="<?= $row['quantity'] ?>" 
-                            data-expiration="<?= $row['expiration'] ?>" 
-                            onclick="openEditModal(this)">
-                            Edit
-                        </button>
-                        </td>
+                        <td><?= htmlspecialchars($row['teacher_name']) ?></td>
+                        <td><?= htmlspecialchars($row['admin_name']) ?></td>
+                        <td><?= htmlspecialchars($row['assigned_date']) ?></td>
+                        <td><?= $row['end_date'] ? htmlspecialchars($row['end_date']) : '-' ?></td>
+                        <td><?= htmlspecialchars($row['remarks'] ?? '-') ?></td>
                     </tr>
-                    <?php endwhile; ?>
-                    </tbody>
-                </table>
-
+                <?php } ?>
+            </tbody>
+        </table>
+</div>
                 </div>
             </div>
             </div>

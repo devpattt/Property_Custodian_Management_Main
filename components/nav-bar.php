@@ -168,7 +168,7 @@ $userId = $_SESSION['user_id'] ?? 'N/A';
             
           <!-- Property Issuance & Acknowledgment -->
           <?php 
-            $issuance_pages = ['history.php','active.php']; 
+            $issuance_pages = ['history.php','active.php','view_request.php']; 
             $is_issuance_active = in_array($current_page, $issuance_pages);
           ?>
           <li class="nav-item">
@@ -179,14 +179,14 @@ $userId = $_SESSION['user_id'] ?? 'N/A';
               <i class="bi bi-chevron-down ms-auto"></i>
             </a>
             <ul id="forms-nav" class="nav-content collapse <?= $is_issuance_active ? 'show' : '' ?>" data-bs-parent="#sidebar-nav">
-               <li>
-                <a href="<?=BASE_URL?>User_Admin/assign_trans/consumable/active_table/active.php" class="<?= $current_page == 'active.php' ? 'active' : '' ?>">
-                  <i class="bi bi-circle"></i><span>Consumable</span>
+              <li>
+                <a href="<?=BASE_URL?>User_Admin/assign_trans/view_request.php" class="<?= $current_page == 'view_request.php' ? 'active' : '' ?>">
+                  <i class="bi bi-circle"></i><span>Requests</span>
                 </a>
               </li>
-              <li>
-                <a href="<?=BASE_URL?>User_Admin/assign_trans/non_consumable/history/history.php" class="<?= $current_page == 'history.php' ? 'active' : '' ?>">
-                  <i class="bi bi-circle"></i><span>Non-Consumable</span>
+               <li>
+                <a href="<?=BASE_URL?>User_Admin/assign_trans/consumable/active_table/active.php" class="<?= $current_page == 'active.php' ? 'active' : '' ?>">
+                  <i class="bi bi-circle"></i><span>Assigned Equipment</span>
                 </a>
               </li>
             </ul>
@@ -364,30 +364,55 @@ $userId = $_SESSION['user_id'] ?? 'N/A';
         <?php
             $current_page = basename($_SERVER['PHP_SELF']);
         ?>
+          <?php 
+            $request_page = [
+              'teacher_request.php',
+            ]; 
+            $is_request_active = in_array($current_page, $request_page);
+          ?>
         <li class="nav-item">
-          <a class="nav-link collapsed <?php if(in_array($current_page, ['report_item.php','track_reports.php'])) echo 'active'; ?>" 
+            <a class="nav-link collapsed <?= $is_request_active ? 'active' : '' ?>" 
+                data-bs-target="#components-nav" data-bs-toggle="collapse" href="#">
+                <i class="bi bi-menu-button-wide"></i>
+                <span>Requests</span>
+                <i class="bi bi-chevron-down ms-auto"></i>
+              </a>
+              <ul id="components-nav" class="nav-content collapse <?= $is_request_active ? 'show' : '' ?>" data-bs-parent="#sidebar-nav">
+                <li>
+                  <a href="<?= BASE_URL ?>User_Teachers/Requests/teacher_request.php" 
+                    class="<?= $current_page == 'teacher_request.php' ? 'active' : '' ?>">
+                    <i class="bi bi-circle"></i><span>Request Item</span>
+                  </a>
+                </li>
+              </ul>
+          <?php 
+            $report_page = [
+              'report_item.php',
+              'track_reports.php',
+            ]; 
+            $is_report_active = in_array($current_page, $report_page);
+          ?>
+          <a class="nav-link collapsed <?= $is_report_active ? 'active' : '' ?>" 
             data-bs-target="#components-nav" data-bs-toggle="collapse" href="#">
             <i class="bi bi-menu-button-wide"></i>
             <span>Report</span>
             <i class="bi bi-chevron-down ms-auto"></i>
           </a>
-          <ul id="components-nav" class="nav-content collapse <?php if(in_array($current_page, ['report_item.php','track_reports.php'])) echo 'show'; ?>" data-bs-parent="#sidebar-nav">
+          <ul id="components-nav" class="nav-content collapse <?= $is_report_active ? 'show' : '' ?>" data-bs-parent="#sidebar-nav">
             <li>
-              <a href="<?= BASE_URL ?>User_Teachers/report_item.php" 
-                class="<?php if($current_page == 'report_item.php') echo 'active'; ?>">
+              <a href="<?= BASE_URL ?>User_Teachers/Reports/report_item.php" 
+                class="<?= $current_page == 'report_item.php' ? 'active' : '' ?>">
                 <i class="bi bi-circle"></i><span>Report Item</span>
               </a>
             </li>
             <li>
-              <a href="<?= BASE_URL ?>User_Teachers/track_reports.php" 
-                class="<?php if($current_page == 'track_reports.php') echo 'active'; ?>">
+              <a href="<?= BASE_URL ?>User_Teachers/Reports/track_reports.php" 
+                class="<?= $current_page == 'track_reports.php' ? 'active' : '' ?>">
                 <i class="bi bi-circle"></i><span>Track Status</span>
               </a>
             </li>
-            
           </ul>
         </li>
-
 <?php endif; ?>
 
 <!-- ================= CUSTODIAN ================= -->

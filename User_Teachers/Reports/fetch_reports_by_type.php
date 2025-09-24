@@ -1,5 +1,5 @@
 <?php
-include '../connection.php';
+include '../../connection.php';
 
 $sql = "
     SELECT DATE(date_reported) as report_date, report_type, COUNT(*) as total

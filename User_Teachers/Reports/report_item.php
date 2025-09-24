@@ -1,6 +1,6 @@
 <?php
 session_start();
-include "../connection.php"; // <-- make sure this points to your DB connection
+include "../../connection.php"; // <-- make sure this points to your DB connection
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -8,17 +8,17 @@ include "../connection.php"; // <-- make sure this points to your DB connection
   <meta charset="utf-8">
   <meta content="width=device-width, initial-scale=1.0" name="viewport">
   <title>Report Item</title>
-  <link href="../assets/img/bagong_silang_logo.png" rel="icon">
-  <link href="../assets/img/apple-touch-icon.png" rel="apple-touch-icon">
-  <link href="../assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
-  <link href="../assets/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
-  <link href="../assets/vendor/boxicons/css/boxicons.min.css" rel="stylesheet">
-  <link href="../assets/vendor/simple-datatables/style.css" rel="stylesheet">
-  <link href="../assets/css/style.css" rel="stylesheet">
+  <link href="../../assets/img/bagong_silang_logo.png" rel="icon">
+  <link href="../../assets/img/apple-touch-icon.png" rel="apple-touch-icon">
+  <link href="../../assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+  <link href="../../assets/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
+  <link href="../../assets/vendor/boxicons/css/boxicons.min.css" rel="stylesheet">
+  <link href="../../assets/vendor/simple-datatables/style.css" rel="stylesheet">
+  <link href="../../assets/css/style.css" rel="stylesheet">
 </head>
 
 <body>
-  <?php include "../components/nav-bar.php"; ?>
+  <?php include "../../components/nav-bar.php"; ?>
 
   <main id="main" class="main">
     <div class="pagetitle">
@@ -32,7 +32,7 @@ include "../connection.php"; // <-- make sure this points to your DB connection
     </div>
 
     <section class="section dashboard">
-      <form method="post" action="<?=BASE_URL?>User_Teachers/save_report.php" enctype="multipart/form-data" class="report-form">
+      <form method="post" action="<?=BASE_URL?>User_Teachers/Reports/save_report.php" enctype="multipart/form-data" class="report-form">
         <h2>Report Lost/Damaged Item</h2>
 
       <div class="form-group">
@@ -112,7 +112,7 @@ include "../connection.php"; // <-- make sure this points to your DB connection
     .btn-submit:hover { background: #0056b3; }
   </style>
 
-  <script src="../assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
-  <script src="../assets/js/main.js"></script>
+  <script src="../../assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <script src="../../assets/js/main.js"></script>
 </body>
 </html>
