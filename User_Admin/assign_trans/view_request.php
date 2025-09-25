@@ -108,7 +108,6 @@ $result = $conn->query($query);
             <td><?= htmlspecialchars($row['requested_qty']) ?></td>
             <td>
               <?php 
-                // Show stock only for consumable rows
                 if ($row['request_type'] === 'Consumable') {
                     echo htmlspecialchars($row['stock_qty'] ?? '0');
                 } else {
