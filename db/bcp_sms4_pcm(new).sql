@@ -157,7 +157,7 @@ CREATE TABLE `bcp_sms4_issuance` (
   CONSTRAINT `fk_issuance_admin` FOREIGN KEY (`issued_by`) REFERENCES `bcp_sms4_admins` (`id`) ON DELETE CASCADE,
   CONSTRAINT `fk_issuance_request` FOREIGN KEY (`request_id`) REFERENCES `bcp_sms4_requests` (`request_id`) ON DELETE CASCADE,
   CONSTRAINT `fk_issuance_teacher` FOREIGN KEY (`teacher_id`) REFERENCES `bcp_sms4_admins` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 DROP TABLE IF EXISTS `bcp_sms4_items`;
 CREATE TABLE `bcp_sms4_items` (
@@ -224,7 +224,7 @@ CREATE TABLE `bcp_sms4_requests` (
   CONSTRAINT `bcp_sms4_requests_ibfk_1` FOREIGN KEY (`teacher_id`) REFERENCES `bcp_sms4_admins` (`id`),
   CONSTRAINT `bcp_sms4_requests_ibfk_2` FOREIGN KEY (`asset_id`) REFERENCES `bcp_sms4_asset` (`asset_id`),
   CONSTRAINT `bcp_sms4_requests_ibfk_3` FOREIGN KEY (`consumable_id`) REFERENCES `bcp_sms4_consumable` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 DROP TABLE IF EXISTS `bcp_sms4_scheduling`;
 CREATE TABLE `bcp_sms4_scheduling` (
