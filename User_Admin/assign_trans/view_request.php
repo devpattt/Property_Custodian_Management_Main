@@ -62,6 +62,7 @@ $result = $conn->query($query);
   ?>
 
   <main id="main" class="main">
+    
     <div class="pagetitle">
       <h1>View Request</h1>
       <nav>
@@ -72,82 +73,105 @@ $result = $conn->query($query);
         </ol>
       </nav>
     </div>
+    
     <section>
     <?php if(isset($_GET['updated'])): ?>
       <div class="alert alert-success">Request processed successfully!</div>
     <?php endif; ?>
 
-     <table class="table table-bordered table-striped">
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Teacher</th>
-            <th>Item</th>
-            <th>Type</th>
-            <th>Requested Qty</th>
-            <th>Stock (if consumable)</th>
-            <th>Status</th>
-            <th>Date Requested</th>
-            <th>Notes</th>
-            <th>Action</th>
-          </tr>
-        </thead>
-        <tbody>
-        <?php while($row = $result->fetch_assoc()): ?>
-          <tr>
-            <td><?= htmlspecialchars($row['request_id']) ?></td>
-            <td><?= htmlspecialchars($row['teacher']) ?></td>
-            <td>
-              <?php if ($row['request_type'] === 'Asset'): ?>
-                <?= htmlspecialchars($row['property_tag'] ?? 'N/A') ?> — <?= htmlspecialchars($row['asset_item'] ?? 'Unknown') ?>
-              <?php else: ?>
-                <?= htmlspecialchars($row['consumable_item'] ?? 'Unknown') ?>
-              <?php endif; ?>
-            </td>
-            <td><?= htmlspecialchars($row['request_type']) ?></td>
-            <td><?= htmlspecialchars($row['requested_qty']) ?></td>
-            <td>
-              <?php 
-                if ($row['request_type'] === 'Consumable') {
-                    echo htmlspecialchars($row['stock_qty'] ?? '0');
-                } else {
-                    echo '—';
-                }
-              ?>
-            </td>
-            <td>
-              <?php if ($row['status'] === 'Pending'): ?>
-                <span class="badge bg-warning text-dark"><?= htmlspecialchars($row['status']) ?></span>
-              <?php elseif ($row['status'] === 'Approved'): ?>
-                <span class="badge bg-success"><?= htmlspecialchars($row['status']) ?></span>
-              <?php elseif ($row['status'] === 'Rejected'): ?>
-                <span class="badge bg-danger"><?= htmlspecialchars($row['status']) ?></span>
-              <?php else: ?>
-                <span class="badge bg-secondary"><?= htmlspecialchars($row['status']) ?></span>
-              <?php endif; ?>
-            </td>
-            <td><?= htmlspecialchars($row['date_requested']) ?></td>
-            <td><?= nl2br(htmlspecialchars($row['notes'])) ?></td>
-            <td>
-              <?php if ($row['status'] === 'Pending'): ?>
-                <form method="post" action="process_request.php" style="display:inline;">
-                  <input type="hidden" name="request_id" value="<?= $row['request_id'] ?>">
-                  <button name="action" value="approve" class="btn btn-sm btn-success">Approve</button>
-                </form>
-                <form method="post" action="process_request.php" style="display:inline;">
-                  <input type="hidden" name="request_id" value="<?= $row['request_id'] ?>">
-                  <button name="action" value="reject" class="btn btn-sm btn-danger">Reject</button>
-                </form>
-              <?php else: ?>
-                <em>No action</em>
-              <?php endif; ?>
-            </td>
-          </tr>
-        <?php endwhile; ?>
-        </tbody>
-      </table>
+    <section class="section">
+      <div class="row">
+        <div class="col-lg-12">
+          <div class="card">
+            <div class="card-body">
+                     <br>
+              <p>
+                <em>Below is a list of all equipment and consumable requests. 
+                You can <b>search, sort, and filter</b> the records to quickly 
+                review requests from teachers, track stock usage, and monitor approvals.</em>
+              </p>
+              <table class="table datatable table-bordered table-striped">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Teacher</th>
+                    <th>Item</th>
+                    <th>Type</th>
+                    <th>Requested Qty</th>
+                    <th>Stock (if consumable)</th>
+                    <th>Status</th>
+                    <th>Date Requested</th>
+                    <th>Notes</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <?php while($row = $result->fetch_assoc()): ?>
+                  <tr>
+                    <td><?= htmlspecialchars($row['request_id']) ?></td>
+                    <td><?= htmlspecialchars($row['teacher']) ?></td>
+                    <td>
+                      <?php if ($row['request_type'] === 'Asset'): ?>
+                        <?= htmlspecialchars($row['property_tag'] ?? 'N/A') ?> — <?= htmlspecialchars($row['asset_item'] ?? 'Unknown') ?>
+                      <?php else: ?>
+                        <?= htmlspecialchars($row['consumable_item'] ?? 'Unknown') ?>
+                      <?php endif; ?>
+                    </td>
+                    <td><?= htmlspecialchars($row['request_type']) ?></td>
+                    <td><?= htmlspecialchars($row['requested_qty']) ?></td>
+                    <td>
+                      <?php 
+                        if ($row['request_type'] === 'Consumable') {
+                            echo htmlspecialchars($row['stock_qty'] ?? '0');
+                        } else {
+                            echo '—';
+                        }
+                      ?>
+                    </td>
+                    <td>
+                      <?php if ($row['status'] === 'Pending'): ?>
+                        <span class="badge bg-warning text-dark"><?= htmlspecialchars($row['status']) ?></span>
+                      <?php elseif ($row['status'] === 'Approved'): ?>
+                        <span class="badge bg-success"><?= htmlspecialchars($row['status']) ?></span>
+                      <?php elseif ($row['status'] === 'Rejected'): ?>
+                        <span class="badge bg-danger"><?= htmlspecialchars($row['status']) ?></span>
+                      <?php else: ?>
+                        <span class="badge bg-secondary"><?= htmlspecialchars($row['status']) ?></span>
+                      <?php endif; ?>
+                    </td>
+                    <td><?= htmlspecialchars($row['date_requested']) ?></td>
+                    <td><?= nl2br(htmlspecialchars($row['notes'])) ?></td>
+                    <td>
+                      <?php if ($row['status'] === 'Pending'): ?>
+                        <form method="post" action="process_request.php" style="display:inline;">
+                          <input type="hidden" name="request_id" value="<?= $row['request_id'] ?>">
+                          <button name="action" value="approve" class="btn btn-sm btn-success">Approve</button>
+                        </form>
+                        <form method="post" action="process_request.php" style="display:inline;">
+                          <input type="hidden" name="request_id" value="<?= $row['request_id'] ?>">
+                          <button name="action" value="reject" class="btn btn-sm btn-danger">Reject</button>
+                        </form>
+                      <?php else: ?>
+                        <em>No action</em>
+                      <?php endif; ?>
+                    </td>
+                  </tr>
+                  <?php endwhile; ?>
+
+                  <?php if ($result->num_rows === 0): ?>
+                  <tr>
+                    <td colspan="10" class="text-center">No requests found</td>
+                  </tr>
+                  <?php endif; ?>
+                </tbody>
+              </table>
+
+            </div>
+          </div>
+        </div>
+      </div>
     </section>
-  </main>
+    </main>
 
   <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
   <script src="../../assets/vendor/apexcharts/apexcharts.min.js"></script>

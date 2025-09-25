@@ -72,62 +72,74 @@ $result = $conn->query($query);
       </nav>
     </div>
 
-        <section class="section">
-         <div class="row">
-            <div class="col-lg-12">
-              <div class="card">
-                <div class="card-body">
-                         <br>
-                <p>
-                    <em>
-                    Below is a list of all active custodians and their assigned equipment.  
-                    You can <b>search, sort, and filter</b> the records to quickly find details  
-                    about custodians, departments, or equipment.  
-                    Note: If both <b>Box</b> and <b>Quantity</b> reach 0, the row will automatically be deleted.
-                    </em>
-                </p>
-                <div class="d-flex justify-content-between align-items-center mb-3">
-    <h5 class="mb-0">Active Custodians and Assigned Equipment</h5>
-</div>
-
-<div class="table-responsive">
-    <table class="table table-bordered table-striped">
-            <thead class="table-dark">
-                <tr>
-                    <th>Reference No</th>
-                    <th>Item</th>
-                    <th>Category</th>
-                    <th>Quantity</th>
-                    <th>Teacher</th>
-                    <th>Issued By</th>
-                    <th>Issued Date</th>
-                    <th>Return Date</th>
-                    <th>Remarks</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php while($row = $result->fetch_assoc()) { ?>
+    <section class="section">
+      <div class="row">
+        <div class="col-lg-12">
+          <div class="card">
+            <div class="card-body">
+              <br>            
+              <p>
+                <em>
+                  Below is a list of all active custodians and their assigned equipment.  
+                  You can <b>search, sort, and filter</b> the records to quickly find details  
+                  about custodians, departments, or equipment.  
+                  <br>Note: If both <b>Box</b> and <b>Quantity</b> reach 0, the row will automatically be deleted.
+                </em>
+              </p>
+              <div class="d-flex justify-content-between align-items-center mb-3">
+              </div>
+              <div class="table-responsive">
+                <table class="table datatable table-bordered table-striped">
+                  <thead class="table-dark">
                     <tr>
+                      <th>Reference No</th>
+                      <th>Item</th>
+                      <th>Category</th>
+                      <th>Quantity</th>
+                      <th>Teacher</th>
+                      <th>Issued By</th>
+                      <th data-type="date" data-format="YYYY/MM/DD">Issued Date</th>
+                      <th data-type="date" data-format="YYYY/MM/DD">Return Date</th>
+                      <th>Remarks</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <?php if ($result->num_rows > 0): ?>
+                      <?php while($row = $result->fetch_assoc()): ?>
+                      <tr>
                         <td><?= htmlspecialchars($row['reference_no']) ?></td>
                         <td><?= htmlspecialchars($row['item_name']) ?></td>
-                        <td><?= htmlspecialchars($row['category']) ?></td>
+                        <td>
+                          <?php if ($row['category'] === 'Asset'): ?>
+                            <span class="badge bg-primary">Asset</span>
+                          <?php else: ?>
+                            <span class="badge bg-info text-dark">Consumable</span>
+                          <?php endif; ?>
+                        </td>
                         <td><?= htmlspecialchars($row['quantity']) ?></td>
                         <td><?= htmlspecialchars($row['teacher_name']) ?></td>
                         <td><?= htmlspecialchars($row['admin_name']) ?></td>
-                        <td><?= htmlspecialchars($row['assigned_date']) ?></td>
-                        <td><?= $row['end_date'] ? htmlspecialchars($row['end_date']) : '-' ?></td>
+                        <td><?= date('Y/m/d', strtotime($row['assigned_date'])) ?></td>
+                        <td>
+                          <?= $row['end_date'] ? date('Y/m/d', strtotime($row['end_date'])) : '<span class="text-muted">—</span>' ?>
+                        </td>
                         <td><?= htmlspecialchars($row['remarks'] ?? '-') ?></td>
-                    </tr>
-                <?php } ?>
-            </tbody>
-        </table>
-</div>
-                </div>
-            </div>
-            </div>
-        </div>
-        </section>
+                      </tr>
+                      <?php endwhile; ?>
+                    <?php else: ?>
+                      <tr>
+                        <td colspan="9" class="text-center">No active custodians found</td>
+                      </tr>
+                    <?php endif; ?>
+                  </tbody>
+                </table>
+              </div>
 
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
 
       <script>
       $(document).ready(function() {
