@@ -70,10 +70,10 @@ session_start();
 
                   <div class="d-flex align-items-center">
                     <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
-                      <i class="bi bi-cart"></i>
+                      <i class="bi bi-arrow-clockwise"></i>
                     </div>
                     <div class="ps-3">
-                      <h6>145</h6>
+                      <h6 id="inprogress-count">0</h6>
                     </div>
                   </div>
                 </div>
@@ -103,10 +103,10 @@ session_start();
 
                   <div class="d-flex align-items-center">
                     <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
-                      <i class="bi bi-currency-dollar"></i>
+                      <i class="bi bi-check2-circle"></i>
                     </div>
                     <div class="ps-3">
-                      <h6>3,264</h6>
+                      <h6 id="completed-count">0</h6>
                     </div>
                   </div>
                 </div>
@@ -137,10 +137,10 @@ session_start();
 
                   <div class="d-flex align-items-center">
                     <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
-                      <i class="bi bi-people"></i>
+                      <i class="bi bi-journal-check"></i>
                     </div>
                     <div class="ps-3">
-                      <h6>1244</h6>
+                      <h6 id="schedules-count">0</h6>
                     </div>
                   </div>
 
@@ -171,59 +171,47 @@ session_start();
 
                   <!-- Line Chart -->
                   <div id="reportsChart"></div>
-
-                  <script>
-                    document.addEventListener("DOMContentLoaded", () => {
-                      new ApexCharts(document.querySelector("#reportsChart"), {
-                        series: [{
-                          name: 'Sales',
-                          data: [31, 40, 28, 51, 42, 82, 56],
-                        }, {
-                          name: 'Revenue',
-                          data: [11, 32, 45, 32, 34, 52, 41]
-                        }, {
-                          name: 'Customers',
-                          data: [15, 11, 32, 18, 9, 24, 11]
-                        }],
-                        chart: {
-                          height: 350,
-                          type: 'area',
-                          toolbar: {
-                            show: false
+                    <script>
+                  document.addEventListener("DOMContentLoaded", () => {
+                    fetch("fetch_reports_chart.php") // path must be correct
+                      .then(response => response.json())
+                      .then(data => {
+                        new ApexCharts(document.querySelector("#reportsChart"), {
+                          series: [{
+                            name: 'Reports',
+                            data: data.counts
+                          }],
+                          chart: {
+                            height: 350,
+                            type: 'area',
+                            toolbar: { show: false }
                           },
-                        },
-                        markers: {
-                          size: 4
-                        },
-                        colors: ['#4154f1', '#2eca6a', '#ff771d'],
-                        fill: {
-                          type: "gradient",
-                          gradient: {
-                            shadeIntensity: 1,
-                            opacityFrom: 0.3,
-                            opacityTo: 0.4,
-                            stops: [0, 90, 100]
+                          markers: { size: 4 },
+                          colors: ['#4154f1'],
+                          fill: {
+                            type: "gradient",
+                            gradient: {
+                              shadeIntensity: 1,
+                              opacityFrom: 0.3,
+                              opacityTo: 0.4,
+                              stops: [0, 90, 100]
+                            }
+                          },
+                          dataLabels: { enabled: false },
+                          stroke: { curve: 'smooth', width: 2 },
+                          xaxis: {
+                            type: 'category',
+                            categories: data.dates
+                          },
+                          tooltip: {
+                            x: { format: 'yyyy-MM-dd' }
                           }
-                        },
-                        dataLabels: {
-                          enabled: false
-                        },
-                        stroke: {
-                          curve: 'smooth',
-                          width: 2
-                        },
-                        xaxis: {
-                          type: 'datetime',
-                          categories: ["2018-09-19T00:00:00.000Z", "2018-09-19T01:30:00.000Z", "2018-09-19T02:30:00.000Z", "2018-09-19T03:30:00.000Z", "2018-09-19T04:30:00.000Z", "2018-09-19T05:30:00.000Z", "2018-09-19T06:30:00.000Z"]
-                        },
-                        tooltip: {
-                          x: {
-                            format: 'dd/MM/yy HH:mm'
-                          },
-                        }
-                      }).render();
-                    });
+                        }).render();
+                      })
+                      .catch(error => console.error("Error loading reports chart:", error));
+                  });
                   </script>
+
                 </div>
 
               </div>
@@ -296,7 +284,19 @@ session_start();
   <script src="../assets/vendor/tinymce/tinymce.min.js"></script>
   <script src="../assets/vendor/php-email-form/validate.js"></script>
   <script src="../assets/js/main.js"></script>
-  
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      fetch("fetch_dashboard_counts.php")
+        .then(response => response.json())
+        .then(data => {
+          document.getElementById("inprogress-count").innerText = data.inprogress;
+          document.getElementById("completed-count").innerText = data.completed;
+          document.getElementById("schedules-count").innerText = data.schedules;
+        })
+        .catch(error => console.error("Error fetching counts:", error));
+    });
+    </script>
+
   <script>
   document.addEventListener("DOMContentLoaded", function() {
       const activityContainer = document.querySelector('.activity');
