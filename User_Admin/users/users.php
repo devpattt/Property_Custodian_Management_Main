@@ -23,7 +23,6 @@ session_start();
   <link href="../../assets/vendor/remixicon/remixicon.css" rel="stylesheet">
   <link href="../../assets/vendor/simple-datatables/style.css" rel="stylesheet">
   <link href="../../assets/css/style.css" rel="stylesheet">
-  <link href="../../assets/css/schedule_maintenance.css" rel="stylesheet">
 </head>
 
 <body>
@@ -38,8 +37,8 @@ session_start();
       <nav>
         <ol class="breadcrumb">
           <li class="breadcrumb-item"><a href="<?=BASE_URL?>User_Admin/dashboard.php">Home</a></li>
-          <li class="breadcrumb-item">Preventive Maintenance Scheduling</li>
-          <li class="breadcrumb-item active">Maintenance Records</li>
+          <li class="breadcrumb-item"><a href="<?=BASE_URL?>User_Admin/users/users.php">User Roles & Access Control</a></li>
+          <li class="breadcrumb-item active">Roles & Access Control</li>
         </ol>
       </nav>
     </div><!-- End Page Title -->
@@ -55,22 +54,8 @@ session_start();
     try {
         $pdo = new PDO("mysql:host=$host;dbname=$dbname", $username, $password);
         $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-        $stmt = $pdo->query("SELECT asset, type, frequency, personnel, start_date FROM bcp_sms4_scheduling ORDER BY start_date DESC");
+        $stmt = $pdo->query("SELECT user_type, username, fullname, email FROM bcp_sms4_admins ORDER BY id DESC");
         $schedules = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        foreach ($schedules as &$schedule) {
-            $startDate = new DateTime($schedule['start_date']);
-            $today = new DateTime();
-            if ($startDate > $today) {
-                $schedule['status'] = 'Scheduled';
-            } elseif ($startDate <= $today) {
-                $daysDiff = $today->diff($startDate)->days;
-                if ($daysDiff > 7) {
-                    $schedule['status'] = 'Completed';
-                } else {
-                    $schedule['status'] = 'In Progress';
-                }
-            }
-        }
         
     } catch(PDOException $e) {
         echo "Connection failed: " . $e->getMessage();
@@ -85,51 +70,29 @@ session_start();
                     <div class="card-body">
                         <h5 class="card-title"></h5>
                         <p>
-                            <em>Below is a list of all scheduled and completed maintenance activities.
-                            You can <b>search, sort, and filter</b> the records to quickly find details
-                            about specific assets, service providers, or dates.
-                            Use this table to track the status of preventive maintenance tasks and
-                            review past maintenance history.</em>
+                            <em>Below is a list of all registered administrators. 
+                            You can <b>search, sort, and filter</b> the records to quickly find details 
+                            such as user type, name, or email. 
+                            Use this table to see all the user access and keep track of admin accounts.</em>
                         </p>
+
                         <br>
                         <table class="table datatable">
                             <thead>
                                 <tr>
-                                    <th><b>A</b>sset</th>
-                                    <th>Type</th>
-                                    <th>Frequency</th>
-                                    <th>Personnel</th>
-                                    <th data-type="date" data-format="YYYY/MM/DD">Start Date</th>
-                                    <th>Status</th>
+                                    <th>User Type</th>
+                                    <th>Username</th>
+                                    <th>Fullname</th>
+                                    <th>Email</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <?php foreach ($schedules as $schedule): ?>
                                 <tr>
-                                    <td><?php echo htmlspecialchars($schedule['asset']); ?></td>
-                                    <td><?php echo htmlspecialchars($schedule['type']); ?></td>
-                                    <td><?php echo htmlspecialchars($schedule['frequency']); ?></td>
-                                    <td><?php echo htmlspecialchars($schedule['personnel']); ?></td>
-                                    <td><?php echo date('Y/m/d', strtotime($schedule['start_date'])); ?></td>
-                                    <td>
-                                        <?php 
-                                        $statusClass = '';
-                                        switch($schedule['status']) {
-                                            case 'Completed':
-                                                $statusClass = 'badge bg-success';
-                                                break;
-                                            case 'In Progress':
-                                                $statusClass = 'badge bg-warning';
-                                                break;
-                                            case 'Scheduled':
-                                                $statusClass = 'badge bg-primary';
-                                                break;
-                                            default:
-                                                $statusClass = 'badge bg-secondary';
-                                        }
-                                        ?>
-                                        <span class="<?php echo $statusClass; ?>"><?php echo htmlspecialchars($schedule['status']); ?></span>
-                                    </td>
+                                    <td><?php echo htmlspecialchars($schedule['user_type']); ?></td>
+                                    <td><?php echo htmlspecialchars($schedule['username']); ?></td>
+                                    <td><?php echo htmlspecialchars($schedule['fullname']); ?></td>
+                                    <td><?php echo htmlspecialchars($schedule['email']); ?></td>
                                 </tr>
                                 <?php endforeach; ?>
                                 <?php if (empty($schedules)): ?>
@@ -144,32 +107,6 @@ session_start();
             </div>
         </div>
     </section>
-
-    <script>
-    $(document).ready(function() {
-        if (!$.fn.DataTable.isDataTable('.datatable')) {
-            $('.datatable').DataTable({
-                "pageLength": 10,
-                "lengthChange": true,
-                "searching": true,
-                "ordering": true,
-                "info": true,
-                "autoWidth": false,
-                "responsive": true,
-                "columnDefs": [
-                    {
-                        "targets": 4, 
-                        "type": "date"
-                    },
-                    {
-                        "targets": 5, 
-                        "orderable": true
-                    }
-                ]
-            });
-        }
-    });
-    </script>
   </main>
 
   <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
