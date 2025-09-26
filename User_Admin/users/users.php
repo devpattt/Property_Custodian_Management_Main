@@ -54,8 +54,9 @@ session_start();
     try {
         $pdo = new PDO("mysql:host=$host;dbname=$dbname", $username, $password);
         $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-        $stmt = $pdo->query("SELECT user_type, username, fullname, email FROM bcp_sms4_admins ORDER BY id DESC");
+        $stmt = $pdo->query("SELECT id, user_type, username, fullname, email FROM bcp_sms4_admins ORDER BY id DESC");
         $schedules = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
         
     } catch(PDOException $e) {
         echo "Connection failed: " . $e->getMessage();
@@ -80,6 +81,7 @@ session_start();
                         <table class="table datatable">
                             <thead>
                                 <tr>
+                                    <th>ID</th>
                                     <th>User Type</th>
                                     <th>Username</th>
                                     <th>Fullname</th>
@@ -89,6 +91,7 @@ session_start();
                             <tbody>
                                 <?php foreach ($schedules as $schedule): ?>
                                 <tr>
+                                    <td><?php echo htmlspecialchars($schedule['id']); ?></td>
                                     <td><?php echo htmlspecialchars($schedule['user_type']); ?></td>
                                     <td><?php echo htmlspecialchars($schedule['username']); ?></td>
                                     <td><?php echo htmlspecialchars($schedule['fullname']); ?></td>
@@ -97,7 +100,7 @@ session_start();
                                 <?php endforeach; ?>
                                 <?php if (empty($schedules)): ?>
                                 <tr>
-                                    <td colspan="6" class="text-center">No maintenance schedules found</td>
+                                    <td colspan="6" class="text-center">No Matching Account found</td>
                                 </tr>
                                 <?php endif; ?>
                             </tbody>
