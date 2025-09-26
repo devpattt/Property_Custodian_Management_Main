@@ -321,8 +321,7 @@ $userId = $_SESSION['user_id'] ?? 'N/A';
           <!-- User Roles & Access Control -->
           <?php 
             $user_roles_pages = [
-              'tables-general.html',
-              'tables-data.html'
+              'users.php',
             ]; 
             $is_user_roles_active = in_array($current_page, $user_roles_pages);
           ?>
@@ -335,13 +334,8 @@ $userId = $_SESSION['user_id'] ?? 'N/A';
             </a>
             <ul id="user-roles-nav" class="nav-content collapse <?= $is_user_roles_active ? 'show' : '' ?>" data-bs-parent="#sidebar-nav">
               <li>
-                <a href="tables-general.html" class="<?= $current_page == 'tables-general.html' ? 'active' : '' ?>">
-                  <i class="bi bi-circle"></i><span>General Tables</span>
-                </a>
-              </li>
-              <li>
-                <a href="tables-data.html" class="<?= $current_page == 'tables-data.html' ? 'active' : '' ?>">
-                  <i class="bi bi-circle"></i><span>Data Tables</span>
+                <a href="<?= BASE_URL ?>User_Admin/users/users.php" class="<?= $current_page == 'users.php' ? 'active' : '' ?>">
+                  <i class="bi bi-circle"></i><span>Users</span>
                 </a>
               </li>
             </ul>
