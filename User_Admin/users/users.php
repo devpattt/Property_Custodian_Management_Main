@@ -23,6 +23,7 @@ session_start();
   <link href="../../assets/vendor/remixicon/remixicon.css" rel="stylesheet">
   <link href="../../assets/vendor/simple-datatables/style.css" rel="stylesheet">
   <link href="../../assets/css/style.css" rel="stylesheet">
+  <link href="../../assets/css/schedule_maintenance.css" rel="stylesheet">
 </head>
 
 <body>
@@ -32,7 +33,7 @@ session_start();
 
   <main id="main" class="main">
 
-    <div class="pagetitle">
+<div class="pagetitle">
       <h1>Maintenance Records</h1>
       <nav>
         <ol class="breadcrumb">
@@ -41,72 +42,97 @@ session_start();
           <li class="breadcrumb-item active">Roles & Access Control</li>
         </ol>
       </nav>
-    </div><!-- End Page Title -->
+    </div>
 
+      <?php
+      $host = 'localhost';
+      $dbname = 'bcp_sms4_pcm';
+      $username = 'root'; 
+      $password = ''; 
 
-    <!-- Maintenance Table -->
-    <?php
-    $host = 'localhost';
-    $dbname = 'bcp_sms4_pcm';
-    $username = 'root'; 
-    $password = ''; 
+      try {
+          $pdo = new PDO("mysql:host=$host;dbname=$dbname", $username, $password);
+          $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-    try {
-        $pdo = new PDO("mysql:host=$host;dbname=$dbname", $username, $password);
-        $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-        $stmt = $pdo->query("SELECT user_type, username, fullname, email FROM bcp_sms4_admins ORDER BY id DESC");
-        $schedules = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        
-    } catch(PDOException $e) {
-        echo "Connection failed: " . $e->getMessage();
-        $schedules = []; 
-    }
-    ?>
+          $stmt = $pdo->query("SELECT id, user_type, username, fullname, email FROM bcp_sms4_admins ORDER BY id DESC");
+          $admins = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    <section class="section">
+      } catch(PDOException $e) {
+          echo "Connection failed: " . $e->getMessage();
+          $admins = [];
+      }
+      ?>
+
+      <section class="section">
         <div class="row">
-            <div class="col-lg-12">
-                <div class="card">
-                    <div class="card-body">
-                        <h5 class="card-title"></h5>
-                        <p>
+          <div class="col-lg-12">
+            <div class="card">
+              <div class="card-body">
+                <br>
+                <p>
                             <em>Below is a list of all registered administrators. 
                             You can <b>search, sort, and filter</b> the records to quickly find details 
                             such as user type, name, or email. 
                             Use this table to see all the user access and keep track of admin accounts.</em>
                         </p>
-
-                        <br>
-                        <table class="table datatable">
-                            <thead>
-                                <tr>
-                                    <th>User Type</th>
-                                    <th>Username</th>
-                                    <th>Fullname</th>
-                                    <th>Email</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php foreach ($schedules as $schedule): ?>
-                                <tr>
-                                    <td><?php echo htmlspecialchars($schedule['user_type']); ?></td>
-                                    <td><?php echo htmlspecialchars($schedule['username']); ?></td>
-                                    <td><?php echo htmlspecialchars($schedule['fullname']); ?></td>
-                                    <td><?php echo htmlspecialchars($schedule['email']); ?></td>
-                                </tr>
-                                <?php endforeach; ?>
-                                <?php if (empty($schedules)): ?>
-                                <tr>
-                                    <td colspan="6" class="text-center">No maintenance schedules found</td>
-                                </tr>
-                                <?php endif; ?>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+                <table class="table datatable">
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>User Type</th>
+                      <th>Username</th>
+                      <th>Full Name</th>
+                      <th>Email</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <?php foreach ($admins as $admin): ?>
+                    <tr>
+                      <td><?= htmlspecialchars($admin['id']); ?></td>
+                      <td><?= htmlspecialchars($admin['user_type']); ?></td>
+                      <td><?= htmlspecialchars($admin['username']); ?></td>
+                      <td><?= htmlspecialchars($admin['fullname']); ?></td>
+                      <td><?= htmlspecialchars($admin['email']); ?></td>
+                    </tr>
+                    <?php endforeach; ?>
+                    <?php if (empty($admins)): ?>
+                    <tr>
+                      <td colspan="5" class="text-center">No admin accounts found</td>
+                    </tr>
+                    <?php endif; ?>
+                  </tbody>
+                </table>
+              </div>
             </div>
+          </div>
         </div>
-    </section>
+      </section>
+
+    <script>
+    $(document).ready(function() {
+        if (!$.fn.DataTable.isDataTable('.datatable')) {
+            $('.datatable').DataTable({
+                "pageLength": 10,
+                "lengthChange": true,
+                "searching": true,
+                "ordering": true,
+                "info": true,
+                "autoWidth": false,
+                "responsive": true,
+                "columnDefs": [
+                    {
+                        "targets": 4, 
+                        "type": "date"
+                    },
+                    {
+                        "targets": 5, 
+                        "orderable": true
+                    }
+                ]
+            });
+        }
+    });
+    </script>
   </main>
 
   <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>

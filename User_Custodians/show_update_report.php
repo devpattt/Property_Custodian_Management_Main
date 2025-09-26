@@ -1,6 +1,6 @@
 <?php
 session_start();
-include '../../connection.php';
+include '../connection.php';
 
 if (!isset($_SESSION['user_id'])) {
     exit("<p class='text-danger'>Session expired. Please login again.</p>");
@@ -13,7 +13,6 @@ if (!isset($_GET['id'])) {
 $report_id = intval($_GET['id']);
 $user_id   = $_SESSION['user_id'];
 
-// JOIN to get item name from either asset or consumable
 $stmt = $conn->prepare("
     SELECT r.*, 
            a.property_tag,
@@ -47,7 +46,7 @@ if (!defined('BASE_URL')) {
 }
 ?>
 
-<form method="post" action="<?= $base_url ?>User_Custodians/Reports/update_status.php">
+<form method="post" action="<?= $base_url ?>User_Custodians/update_status.php">
     <input type="hidden" name="report_id" value="<?= $report['id'] ?>">
 
     <div class="mb-3">

@@ -42,8 +42,7 @@ session_start();
           <li class="breadcrumb-item active">Maintenance Records</li>
         </ol>
       </nav>
-    </div><!-- End Page Title -->
-
+    </div>
 
     <!-- Maintenance Table -->
     <?php
