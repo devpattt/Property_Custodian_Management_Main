@@ -92,44 +92,44 @@ $result = $stmt->get_result();
                   </tr>
                 </thead>
               <tbody>
-  <?php while ($row = $result->fetch_assoc()): ?>
-  <tr>
-    <td><?= $row['id'] ?></td>
-    <td><?= htmlspecialchars($row['teacher']) ?></td>
- <td>
-  <?php if ($row['property_tag']): ?>
-    <?= htmlspecialchars($row['property_tag']) ?> - <?= htmlspecialchars($row['asset_item_name']) ?>
-  <?php elseif ($row['consumable_item_name']): ?>
-    <?= htmlspecialchars($row['consumable_item_name']) ?>
-  <?php else: ?>
-    <em>Unknown Item</em>
-  <?php endif; ?>
-</td>
+                  <?php while ($row = $result->fetch_assoc()): ?>
+                  <tr>
+                    <td><?= $row['id'] ?></td>
+                    <td><?= htmlspecialchars($row['teacher']) ?></td>
+                <td>
+                  <?php if ($row['property_tag']): ?>
+                    <?= htmlspecialchars($row['property_tag']) ?> - <?= htmlspecialchars($row['asset_item_name']) ?>
+                  <?php elseif ($row['consumable_item_name']): ?>
+                    <?= htmlspecialchars($row['consumable_item_name']) ?>
+                  <?php else: ?>
+                    <em>Unknown Item</em>
+                  <?php endif; ?>
+                </td>
 
-    <td><?= ucfirst($row['report_type']) ?></td>
-    <td>
-      <?php if ($row['status'] == 'pending'): ?>
-        <span class="badge bg-warning text-dark"><?= ucfirst($row['status']) ?></span>
-      <?php elseif ($row['status'] == 'approved'): ?>
-        <span class="badge bg-success"><?= ucfirst($row['status']) ?></span>
-      <?php else: ?>
-        <span class="badge bg-secondary"><?= ucfirst($row['status']) ?></span>
-      <?php endif; ?>
-    </td>
-    <td><?= $row['date_reported'] ?></td>
-    <td>
-      <button 
-        type="button" 
-        class="btn btn-sm btn-primary update-btn" 
-        data-id="<?= $row['id']?>"
-        data-bs-toggle="modal" 
-        data-bs-target="#updateModal">
-        Update
-      </button>
-    </td>
-  </tr>
-  <?php endwhile; ?>
-</tbody>
+                    <td><?= ucfirst($row['report_type']) ?></td>
+                    <td>
+                      <?php if ($row['status'] == 'pending'): ?>
+                        <span class="badge bg-warning text-dark"><?= ucfirst($row['status']) ?></span>
+                      <?php elseif ($row['status'] == 'approved'): ?>
+                        <span class="badge bg-success"><?= ucfirst($row['status']) ?></span>
+                      <?php else: ?>
+                        <span class="badge bg-secondary"><?= ucfirst($row['status']) ?></span>
+                      <?php endif; ?>
+                    </td>
+                    <td><?= $row['date_reported'] ?></td>
+                    <td>
+                      <button 
+                        type="button" 
+                        class="btn btn-sm btn-primary update-btn" 
+                        data-id="<?= $row['id']?>"
+                        data-bs-toggle="modal" 
+                        data-bs-target="#updateModal">
+                        Update
+                      </button>
+                    </td>
+                  </tr>
+                  <?php endwhile; ?>
+                </tbody>
 
               </table>
             </div>
