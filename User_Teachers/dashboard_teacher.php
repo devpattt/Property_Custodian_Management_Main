@@ -29,7 +29,6 @@ session_start();
 <body>
   <?php
     include  "../components/nav-bar.php";
-    include  "fetch_report_counts.php";
   ?>
   <main id="main" class="main">
 
@@ -147,8 +146,7 @@ session_start();
 
             </div>
                 <script>
-                document.addEventListener("DOMContentLoaded", () => {
-                  fetch("fetch_report_counts.php")
+                  fetch("Reports/fetch_report_counts.php")
                     .then(response => response.json())
                     .then(data => {
                       document.getElementById("pendingCount").innerText = data["Pending"] ?? 0;
@@ -156,7 +154,12 @@ session_start();
                       document.getElementById("resolvedCount").innerText = data["Resolved"] ?? 0;
                     })
                     .catch(error => console.error("Error fetching counts:", error));
-                });
+
+                  fetch("Reports/fetch_reports_by_type.php")
+                    .then(response => response.json())
+                    .then(data => {
+                    })
+                    .catch(error => console.error("Chart fetch error:", error));
                 </script>
 
             <!-- Reports -->
@@ -179,41 +182,49 @@ session_start();
 
                   <div id="reportsChart"></div>
                 <script>
-                  document.addEventListener("DOMContentLoaded", () => {
-                    fetch("fetch_reports_by_type.php")
-                      .then(response => response.json())
-                      .then(data => {
-                        new ApexCharts(document.querySelector("#reportsChart"), {
-                          series: data.series,
-                          chart: {
-                            height: 350,
-                            type: 'area',
-                            toolbar: { show: false }
-                          },
-                          markers: { size: 4 },
-                          colors: ['#4154f1', '#ff771d', '#2eca6a'], 
-                          fill: {
-                            type: "gradient",
-                            gradient: {
-                              shadeIntensity: 1,
-                              opacityFrom: 0.3,
-                              opacityTo: 0.4,
-                              stops: [0, 90, 100]
-                            }
-                          },
-                          dataLabels: { enabled: false },
-                          stroke: { curve: 'smooth', width: 2 },
-                          xaxis: {
-                            categories: data.dates,
-                            type: 'datetime'
-                          },
-                          tooltip: {
-                            x: { format: 'yyyy-MM-dd' }
+                  fetch("Reports/fetch_report_counts.php")
+                    .then(response => response.json())
+                    .then(data => {
+                      document.getElementById("pendingCount").innerText = data["Pending"] ?? 0;
+                      document.getElementById("inProgressCount").innerText = data["In-Progress"] ?? 0;
+                      document.getElementById("resolvedCount").innerText = data["Resolved"] ?? 0;
+                    })
+                    .catch(error => console.error("Error fetching counts:", error));
+
+                  fetch("Reports/fetch_reports_by_type.php")
+                    .then(response => response.json())
+                    .then(data => {
+                      new ApexCharts(document.querySelector("#reportsChart"), {
+                        series: data.series,
+                        chart: {
+                          height: 350,
+                          type: 'area',
+                          toolbar: { show: false }
+                        },
+                        markers: { size: 4 },
+                        colors: ['#4154f1', '#ff771d', '#2eca6a'],
+                        fill: {
+                          type: "gradient",
+                          gradient: {
+                            shadeIntensity: 1,
+                            opacityFrom: 0.3,
+                            opacityTo: 0.4,
+                            stops: [0, 90, 100]
                           }
-                        }).render();
-                      })
-                      .catch(error => console.error("Chart fetch error:", error));
-                  });
+                        },
+                        dataLabels: { enabled: false },
+                        stroke: { curve: 'smooth', width: 2 },
+                        xaxis: {
+                          categories: data.dates,
+                          type: 'datetime'
+                        },
+                        tooltip: {
+                          x: { format: 'yyyy-MM-dd' }
+                        }
+                      }).render();
+                    })
+                    .catch(error => console.error("Chart fetch error:", error));
+
                   </script>
                 </div>
 

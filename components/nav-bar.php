@@ -108,7 +108,7 @@ $userId = $_SESSION['user_id'] ?? 'N/A';
       <?php if($userRole === 'admin'): ?>
       <li class="nav-item <?php if($current_page == 'dashboard.php') echo 'active'; ?>">
               <a class="nav-link" href="<?= BASE_URL ?>User_Admin/dashboard.php">
-                <i class="bi bi-grid"></i>
+               <i class="bi bi-bar-chart"></i>
                 <span>Reporting & Analytics</span>
               </a>
             </li>
@@ -124,7 +124,7 @@ $userId = $_SESSION['user_id'] ?? 'N/A';
           <li class="nav-item">
             <a class="nav-link collapsed <?= $is_procurement_active ? 'active' : '' ?>" 
               data-bs-target="#procurement-nav" data-bs-toggle="collapse" href="#">
-              <i class="bi bi-layout-text-window-reverse"></i>
+              <i class="bi bi-truck"></i>
               <span>Procurement Coordination</span>
               <i class="bi bi-chevron-down ms-auto"></i>
             </a>
@@ -250,7 +250,7 @@ $userId = $_SESSION['user_id'] ?? 'N/A';
           <li class="nav-item">
             <a class="nav-link collapsed <?= $is_maintenance_active ? 'active' : '' ?>" 
               data-bs-target="#icons-nav" data-bs-toggle="collapse" href="#">
-              <i class="bi bi-gem"></i>
+              <i class="bi bi-exclamation-octagon"></i>
               <span>Preventive Maintenance Scheduling</span>
               <i class="bi bi-chevron-down ms-auto"></i>
             </a>
@@ -281,7 +281,7 @@ $userId = $_SESSION['user_id'] ?? 'N/A';
           <li class="nav-item">
             <a class="nav-link collapsed <?= $is_lost_active ? 'active' : '' ?>" 
               data-bs-target="#tables-nav" data-bs-toggle="collapse" href="#">
-              <i class="bi bi-layout-text-window-reverse"></i>
+              <i class="bi bi-flag"></i>
               <span>Lost, Damaged, or Unserviceable Items</span>
               <i class="bi bi-chevron-down ms-auto"></i>
             </a>
@@ -305,7 +305,7 @@ $userId = $_SESSION['user_id'] ?? 'N/A';
           <li class="nav-item">
             <a class="nav-link collapsed <?= $is_audit_active ? 'active' : '' ?>" 
               data-bs-target="#audit-nav" data-bs-toggle="collapse" href="#">
-              <i class="bi bi-layout-text-window-reverse"></i>
+              <i class="bi bi-box-seam"></i>
               <span>Property Audit & Physical Inventory</span>
               <i class="bi bi-chevron-down ms-auto"></i>
             </a>
@@ -328,7 +328,7 @@ $userId = $_SESSION['user_id'] ?? 'N/A';
           <li class="nav-item">
             <a class="nav-link collapsed <?= $is_user_roles_active ? 'active' : '' ?>" 
               data-bs-target="#user-roles-nav" data-bs-toggle="collapse" href="#">
-              <i class="bi bi-layout-text-window-reverse"></i>
+              <i class="bi bi-person-check"></i>
               <span>User Roles & Access Control</span>
               <i class="bi bi-chevron-down ms-auto"></i>
             </a>
@@ -348,51 +348,48 @@ $userId = $_SESSION['user_id'] ?? 'N/A';
 
     <li class="nav-item <?php if($current_page == 'dashboard_teacher.php') echo 'active'; ?>">
         <a class="nav-link" href="<?= BASE_URL ?>User_Teachers/dashboard_teacher.php">
-            <i class="bi bi-grid"></i>
+            <i class="bi bi-bar-chart"></i>
             <span>Reporting & Analytics</span>
         </a>
     </li>
 
     <hr class="sidebar-divider">
 
-        <?php
-            $current_page = basename($_SERVER['PHP_SELF']);
-        ?>
-          <?php 
-            $request_page = [
-              'teacher_request.php',
-            ]; 
-            $is_request_active = in_array($current_page, $request_page);
-          ?>
-        <li class="nav-item">
-            <a class="nav-link collapsed <?= $is_request_active ? 'active' : '' ?>" 
-                data-bs-target="#components-nav" data-bs-toggle="collapse" href="#">
-                <i class="bi bi-menu-button-wide"></i>
-                <span>Requests</span>
-                <i class="bi bi-chevron-down ms-auto"></i>
-              </a>
-              <ul id="components-nav" class="nav-content collapse <?= $is_request_active ? 'show' : '' ?>" data-bs-parent="#sidebar-nav">
-                <li>
-                  <a href="<?= BASE_URL ?>User_Teachers/Requests/teacher_request.php" 
-                    class="<?= $current_page == 'teacher_request.php' ? 'active' : '' ?>">
-                    <i class="bi bi-circle"></i><span>Request Item</span>
-                  </a>
-                </li>
-              </ul>
-          <?php 
-            $report_page = [
-              'report_item.php',
-              'track_reports.php',
-            ]; 
-            $is_report_active = in_array($current_page, $report_page);
-          ?>
-          <a class="nav-link collapsed <?= $is_report_active ? 'active' : '' ?>" 
-            data-bs-target="#components-nav" data-bs-toggle="collapse" href="#">
-            <i class="bi bi-menu-button-wide"></i>
-            <span>Report</span>
+    <?php $current_page = basename($_SERVER['PHP_SELF']); ?>
+
+    <?php 
+      $request_page = ['teacher_request.php']; 
+      $is_request_active = in_array($current_page, $request_page);
+    ?>
+    <li class="nav-item">
+        <a class="nav-link collapsed <?= $is_request_active ? 'active' : '' ?>" 
+            data-bs-target="#requests-nav" data-bs-toggle="collapse" href="#">
+            <i class="bi bi-arrow-repeat"></i>
+            <span>Requests</span>
             <i class="bi bi-chevron-down ms-auto"></i>
-          </a>
-          <ul id="components-nav" class="nav-content collapse <?= $is_report_active ? 'show' : '' ?>" data-bs-parent="#sidebar-nav">
+        </a>
+        <ul id="requests-nav" class="nav-content collapse <?= $is_request_active ? 'show' : '' ?>" data-bs-parent="#sidebar-nav">
+            <li>
+              <a href="<?= BASE_URL ?>User_Teachers/Requests/teacher_request.php" 
+                class="<?= $current_page == 'teacher_request.php' ? 'active' : '' ?>">
+                <i class="bi bi-circle"></i><span>Request Item</span>
+              </a>
+            </li>
+        </ul>
+    </li>
+
+    <?php 
+      $report_page = ['report_item.php','track_reports.php']; 
+      $is_report_active = in_array($current_page, $report_page);
+    ?>
+    <li class="nav-item">
+        <a class="nav-link collapsed <?= $is_report_active ? 'active' : '' ?>" 
+            data-bs-target="#reports-nav" data-bs-toggle="collapse" href="#">
+            <i class="bi bi-flag"></i>
+            <span>Reports</span>
+            <i class="bi bi-chevron-down ms-auto"></i>
+        </a>
+        <ul id="reports-nav" class="nav-content collapse <?= $is_report_active ? 'show' : '' ?>" data-bs-parent="#sidebar-nav">
             <li>
               <a href="<?= BASE_URL ?>User_Teachers/Reports/report_item.php" 
                 class="<?= $current_page == 'report_item.php' ? 'active' : '' ?>">
@@ -405,9 +402,11 @@ $userId = $_SESSION['user_id'] ?? 'N/A';
                 <i class="bi bi-circle"></i><span>Track Status</span>
               </a>
             </li>
-          </ul>
-        </li>
+        </ul>
+    </li>
+
 <?php endif; ?>
+
 
 <!-- ================= CUSTODIAN ================= -->
 <?php if($userRole === 'custodian'):?>
@@ -417,7 +416,7 @@ $userId = $_SESSION['user_id'] ?? 'N/A';
     <li class="nav-item">
         <a class="nav-link <?= $currentPage === 'dashboard_custodians.php' ? 'active' : '' ?>" 
            href="<?=BASE_URL?>User_Custodians/dashboard_custodians.php">
-            <i class="bi bi-grid"></i>
+            <i class="bi bi-bar-chart"></i>
             <span>Reporting & Analytics</span>
         </a>
     </li>
@@ -427,7 +426,7 @@ $userId = $_SESSION['user_id'] ?? 'N/A';
     <li class="nav-item">
       <a class="nav-link <?= ($currentPage === 'custodian_reports.php' || $currentPage === 'custodian_inventory.php') ? '' : 'collapsed' ?>" 
          data-bs-target="#components-nav" data-bs-toggle="collapse" href="#">
-        <i class="bi bi-menu-button-wide"></i>
+         <i class="bi bi-arrow-repeat"></i>
         <span>Request</span>
         <i class="bi bi-chevron-down ms-auto"></i>
       </a>
