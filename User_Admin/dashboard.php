@@ -285,19 +285,30 @@ session_start();
         <?php
         include '../connection.php';
 
-        $sql = "SELECT id, asset, type, frequency, personnel, start_date, status 
+        $sql1 = "SELECT id, asset, type, frequency, personnel, start_date, status 
                 FROM bcp_sms4_scheduling";
-        $result = $conn->query($sql);
+        $result1 = $conn->query($sql1);
 
         $events = [];
-        while ($row = $result->fetch_assoc()) {
+        while ($row = $result1->fetch_assoc()) {
             $events[] = [
                 "date" => $row['start_date'],
-                "asset" => $row['asset'],
-                "type" => $row['type'],
-                "frequency" => $row['frequency'],
-                "personnel" => $row['personnel'],
-                "status" => $row['status']
+                "title" => $row['asset'],
+                "details" => "Type: {$row['type']}<br>Frequency: {$row['frequency']}<br>Personnel: {$row['personnel']}<br>Status: <b>{$row['status']}</b>",
+                "category" => "maintenance"
+            ];
+        }
+
+        $sql2 = "SELECT id, audit_date, department_code, custodian, status 
+                FROM bcp_sms4_audit";
+        $result2 = $conn->query($sql2);
+
+        while ($row = $result2->fetch_assoc()) {
+            $events[] = [
+                "date" => $row['audit_date'],
+                "title" => "Audit - {$row['department_code']}",
+                "details" => "Department: {$row['department_code']}<br>Custodian: {$row['custodian']}<br>Status: <b>{$row['status']}</b>",
+                "category" => "audit"
             ];
         }
         ?>
@@ -418,7 +429,6 @@ session_start();
         }
 
         if (dayEvents.length > 0) {
-          div.style.background = "#0d6efd";
           div.style.color = "#fff";
           div.style.borderRadius = "50%";
           div.style.cursor = "pointer";
@@ -426,22 +436,18 @@ session_start();
           const tooltip = document.createElement("div");
           tooltip.classList.add("tooltip-box");
 
+          if (dayEvents.some(ev => ev.category === "maintenance")) {
+            div.style.background = "#0dcaf0"; 
+          }
+          if (dayEvents.some(ev => ev.category === "audit")) {
+            div.style.background = "#fd7e14";
+          }
+
           dayEvents.forEach(ev => {
-            tooltip.innerHTML += `
-              <strong>${ev.asset}</strong>
-              Type: ${ev.type}<br>
-              Frequency: ${ev.frequency}<br>
-              Personnel: ${ev.personnel}<br>
-              Status: <b>${ev.status}</b><hr>
-            `;
+            tooltip.innerHTML += `<strong>${ev.title}</strong><br>${ev.details}<hr>`;
           });
 
           div.appendChild(tooltip);
-        }
-
-        if (d === today.getDate() && month === today.getMonth() && year === today.getFullYear()) {
-          div.style.background = "#198754";
-          div.style.color = "#fff";
         }
 
         calendar.appendChild(div);
@@ -460,7 +466,6 @@ session_start();
 
     renderCalendar(currentDate);
   </script>
-
 </body>
 
 </html>
