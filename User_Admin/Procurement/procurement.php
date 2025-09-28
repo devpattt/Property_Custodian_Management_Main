@@ -1,7 +1,6 @@
 <?php
 session_start();
 include_once '../../connection.php'; 
-// ✅ Fetch deliveries from correct tables
 $query = "SELECT 
             p.procurement_id,
             i.item_name AS item,
@@ -20,7 +19,6 @@ $result = $conn->query($query);
 $deliveries = [];
 if ($result && $result->num_rows > 0) {
     while ($row = $result->fetch_assoc()) {
-        // Assign emoji icon based on category
         $icon = "📦"; 
         if (stripos($row['category'], 'electronics') !== false) $icon = "💻";
         elseif (stripos($row['category'], 'furniture') !== false) $icon = "🪑";
@@ -89,8 +87,6 @@ if ($result && $result->num_rows > 0) {
     </button>
   </div>
   <?php include 'report_modal.php';?>
-
-  <!-- Report Modal -->
 
   <!-- Table View -->
   <div id="tableView">
@@ -171,9 +167,6 @@ if ($result && $result->num_rows > 0) {
     </div>
   </div>
 </div>
-
-
-
 
 <!-- Vendor Scripts -->
 <a href="#" class="back-to-top d-flex align-items-center justify-content-center">

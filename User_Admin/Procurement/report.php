@@ -8,11 +8,10 @@ if (!isset($_GET['type'])) {
 
 $type = $_GET['type'];
 $date_condition = "";
-$report_title_suffix = ""; // New variable to hold the formatted date string
+$report_title_suffix = ""; 
 $params = [];
 $param_types = "";
 
-// Helper function to format dates
 function formatDate($dateString) {
     return date("F j, Y", strtotime($dateString));
 }
@@ -20,19 +19,15 @@ function formatDate($dateString) {
 switch ($type) {
     case "today":
         $date_condition = "DATE(p.created_at) = DATE(NOW())"; 
-        // Example: September 29, 2025
         $report_title_suffix = formatDate("today");
         break;
 
     case "week":
-        // Reports for the current week (based on MySQL's CURDATE())
         $date_condition = "YEARWEEK(p.created_at, 1) = YEARWEEK(CURDATE(), 1)";
-        
-        // Calculate the start and end dates of the current week (assuming Monday start)
+ 
         $start_of_week = date("Y-m-d", strtotime('monday this week'));
         $end_of_week = date("Y-m-d", strtotime('sunday this week'));
-        
-        // Example: September 23 to September 29, 2025
+
         $report_title_suffix = formatDate($start_of_week) . " to " . formatDate($end_of_week);
         break;
 
@@ -45,12 +40,11 @@ switch ($type) {
             $params[] = $year;
             $params[] = $month;
             $param_types = "ss";
-            
-            // Example: September, 2025
+
             $report_title_suffix = date("F, Y", strtotime($month_year . "-01")); 
             
         } else {
-            // Default to current month if parameter is missing/invalid
+
             $date_condition = "YEAR(p.created_at) = YEAR(CURDATE()) AND MONTH(p.created_at) = MONTH(CURDATE())";
             $report_title_suffix = date("F, Y");
         }
@@ -63,11 +57,9 @@ switch ($type) {
             $date_condition = "YEAR(p.created_at) = ?";
             $params[] = $year;
             $param_types = "s";
-            
-            // Example: Year of 2025
+  
             $report_title_suffix = "Year of " . htmlspecialchars($year);
         } else {
-            // Default to current year if parameter is missing/invalid
             $current_year = date("Y");
             $date_condition = "YEAR(p.created_at) = YEAR(CURDATE())";
             $report_title_suffix = "Year of " . $current_year;
@@ -79,7 +71,6 @@ switch ($type) {
         die("Invalid report type");
 }
 
-// Prepare the base query with WHERE clause
 $sql_query = "SELECT 
                 p.*, 
                 i.item_name, 
@@ -89,10 +80,8 @@ $sql_query = "SELECT
               WHERE {$date_condition}
               ORDER BY p.procurement_id DESC";
 
-// EXECUTE QUERY USING PREPARED STATEMENTS
 if (!empty($params)) {
     $stmt = $conn->prepare($sql_query);
-    // Note: The call to bind_param assumes mysqli
     $stmt->bind_param($param_types, ...$params);
     $stmt->execute();
     $result = $stmt->get_result();

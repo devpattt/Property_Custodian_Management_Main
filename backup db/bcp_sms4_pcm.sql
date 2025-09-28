@@ -26,13 +26,24 @@ CREATE TABLE `bcp_sms4_admins` (
   `password` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
   `email` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
   PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+DROP TABLE IF EXISTS `bcp_sms4_adminsss`;
+CREATE TABLE `bcp_sms4_adminsss` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `user_type` enum('admin','teacher','custodian') COLLATE utf8mb4_general_ci NOT NULL,
+  `username` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
+  `fullname` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
+  `password` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
+  `email` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
+  PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 DROP TABLE IF EXISTS `bcp_sms4_asset`;
 CREATE TABLE `bcp_sms4_asset` (
   `asset_id` int NOT NULL AUTO_INCREMENT,
   `item_id` int NOT NULL,
-  `property_tag` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
+  `property_tag` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
   `status` enum('In-Use','In-Storage','Damaged','Disposed','Lost') COLLATE utf8mb4_general_ci DEFAULT 'In-Use',
   `location` varchar(100) COLLATE utf8mb4_general_ci DEFAULT NULL,
   `assigned_to` varchar(100) COLLATE utf8mb4_general_ci DEFAULT NULL,
@@ -42,7 +53,7 @@ CREATE TABLE `bcp_sms4_asset` (
   UNIQUE KEY `property_tag_2` (`property_tag`),
   KEY `fk_asset_item` (`item_id`),
   CONSTRAINT `fk_asset_item` FOREIGN KEY (`item_id`) REFERENCES `bcp_sms4_items` (`item_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=212 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=257 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 DROP TABLE IF EXISTS `bcp_sms4_asset_audit`;
 CREATE TABLE `bcp_sms4_asset_audit` (
@@ -108,7 +119,7 @@ CREATE TABLE `bcp_sms4_consumable` (
   PRIMARY KEY (`id`),
   KEY `fk_consumable_item` (`item_id`),
   CONSTRAINT `fk_consumable_item` FOREIGN KEY (`item_id`) REFERENCES `bcp_sms4_items` (`item_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=23 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 DROP TABLE IF EXISTS `bcp_sms4_consumable_audit`;
 CREATE TABLE `bcp_sms4_consumable_audit` (
@@ -124,15 +135,39 @@ CREATE TABLE `bcp_sms4_consumable_audit` (
   CONSTRAINT `bcp_sms4_consumable_audit_ibfk_1` FOREIGN KEY (`consumable_id`) REFERENCES `bcp_sms4_consumable` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+DROP TABLE IF EXISTS `bcp_sms4_issuance`;
+CREATE TABLE `bcp_sms4_issuance` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `reference_no` varchar(55) NOT NULL,
+  `request_id` int NOT NULL,
+  `equipment_id` int NOT NULL,
+  `item_name` varchar(100) NOT NULL,
+  `category` enum('Asset','Consumable') NOT NULL,
+  `quantity` int NOT NULL DEFAULT '1',
+  `teacher_id` int NOT NULL,
+  `department_code` varchar(50) DEFAULT NULL,
+  `issued_by` int NOT NULL,
+  `assigned_date` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `end_date` datetime DEFAULT NULL,
+  `remarks` text,
+  PRIMARY KEY (`id`),
+  KEY `fk_issuance_request` (`request_id`),
+  KEY `fk_issuance_teacher` (`teacher_id`),
+  KEY `fk_issuance_admin` (`issued_by`),
+  CONSTRAINT `fk_issuance_admin` FOREIGN KEY (`issued_by`) REFERENCES `bcp_sms4_admins` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_issuance_request` FOREIGN KEY (`request_id`) REFERENCES `bcp_sms4_requests` (`request_id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_issuance_teacher` FOREIGN KEY (`teacher_id`) REFERENCES `bcp_sms4_admins` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
 DROP TABLE IF EXISTS `bcp_sms4_items`;
 CREATE TABLE `bcp_sms4_items` (
   `item_id` int NOT NULL AUTO_INCREMENT,
-  `item_name` varchar(100) NOT NULL,
-  `category` varchar(50) NOT NULL,
-  `item_type` enum('Asset','Consumable') NOT NULL,
-  `unit` varchar(50) NOT NULL,
+  `item_name` varchar(100) COLLATE utf8mb4_general_ci NOT NULL,
+  `category` varchar(50) COLLATE utf8mb4_general_ci NOT NULL,
+  `item_type` enum('Asset','Consumable') COLLATE utf8mb4_general_ci NOT NULL,
+  `unit` varchar(50) COLLATE utf8mb4_general_ci NOT NULL,
   PRIMARY KEY (`item_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=17 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=17 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 DROP TABLE IF EXISTS `bcp_sms4_procurement`;
 CREATE TABLE `bcp_sms4_procurement` (
@@ -149,7 +184,7 @@ CREATE TABLE `bcp_sms4_procurement` (
   PRIMARY KEY (`procurement_id`),
   KEY `fk_procurement_item` (`item_id`),
   CONSTRAINT `fk_procurement_item` FOREIGN KEY (`item_id`) REFERENCES `bcp_sms4_items` (`item_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=16 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=29 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 DROP TABLE IF EXISTS `bcp_sms4_reports`;
 CREATE TABLE `bcp_sms4_reports` (
@@ -166,10 +201,30 @@ CREATE TABLE `bcp_sms4_reports` (
   KEY `reported_by` (`reported_by`),
   KEY `assigned_to` (`assigned_to`),
   KEY `fk_reports_asset` (`asset_id`),
-  CONSTRAINT `bcp_sms4_reports_ibfk_1` FOREIGN KEY (`assigned_to`) REFERENCES `bcp_sms4_admins` (`id`),
-  CONSTRAINT `bcp_sms4_reports_ibfk_7` FOREIGN KEY (`reported_by`) REFERENCES `bcp_sms4_admins` (`id`),
-  CONSTRAINT `fk_reports_asset` FOREIGN KEY (`asset_id`) REFERENCES `bcp_sms4_asset` (`asset_id`) ON DELETE RESTRICT ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=15 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+  CONSTRAINT `bcp_sms4_reports_ibfk_8` FOREIGN KEY (`assigned_to`) REFERENCES `bcp_sms4_admins` (`id`),
+  CONSTRAINT `bcp_sms4_reports_ibfk_9` FOREIGN KEY (`reported_by`) REFERENCES `bcp_sms4_admins` (`id`),
+  CONSTRAINT `fk_reports_asset` FOREIGN KEY (`asset_id`) REFERENCES `bcp_sms4_asset` (`asset_id`) ON UPDATE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=23 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+DROP TABLE IF EXISTS `bcp_sms4_requests`;
+CREATE TABLE `bcp_sms4_requests` (
+  `request_id` int NOT NULL AUTO_INCREMENT,
+  `teacher_id` int NOT NULL,
+  `asset_id` int DEFAULT NULL,
+  `consumable_id` int DEFAULT NULL,
+  `quantity` int DEFAULT '1',
+  `request_type` enum('Asset','Consumable') NOT NULL,
+  `notes` text,
+  `status` enum('Pending','Approved','Rejected') DEFAULT 'Pending',
+  `date_requested` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`request_id`),
+  KEY `teacher_id` (`teacher_id`),
+  KEY `asset_id` (`asset_id`),
+  KEY `consumable_id` (`consumable_id`),
+  CONSTRAINT `bcp_sms4_requests_ibfk_1` FOREIGN KEY (`teacher_id`) REFERENCES `bcp_sms4_admins` (`id`),
+  CONSTRAINT `bcp_sms4_requests_ibfk_2` FOREIGN KEY (`asset_id`) REFERENCES `bcp_sms4_asset` (`asset_id`),
+  CONSTRAINT `bcp_sms4_requests_ibfk_3` FOREIGN KEY (`consumable_id`) REFERENCES `bcp_sms4_consumable` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 DROP TABLE IF EXISTS `bcp_sms4_scheduling`;
 CREATE TABLE `bcp_sms4_scheduling` (
@@ -186,17 +241,21 @@ CREATE TABLE `bcp_sms4_scheduling` (
 
 
 INSERT INTO `bcp_sms4_admins` (`id`, `user_type`, `username`, `fullname`, `password`, `email`) VALUES
+(2, 'teacher', 'Teacher', 'Teacher', '$2y$10$WHJtGH2A7l3ZEKron3u.WOT6zUR6bGHGhssU0vIWqeo/pm7yUTxma', 'aceplayer81218@gmail.com'),
+(3, 'admin', 'Admin', 'Administrator', '$2y$10$nP8qd/wMRvtqHtc.ukF5d.zkDOQK9DJKLo.p4RaP3EgAMezJkwewS', 'notyujisandesu2@gmail.com'),
+(4, 'custodian', 'Custodian', 'Custodian', '$2y$10$a4y/te38BWq/VZ/hBWsBx.XFaSsuLKZjVnWb9beJcq6nR6CDIkIlO', 'notyujiiiii@gmail.com');
+INSERT INTO `bcp_sms4_adminsss` (`id`, `user_type`, `username`, `fullname`, `password`, `email`) VALUES
 (2, 'teacher', 'Senka', 'Senka', '$2y$10$WHJtGH2A7l3ZEKron3u.WOT6zUR6bGHGhssU0vIWqeo/pm7yUTxma', 'aceplayer81218@gmail.com'),
 (3, 'admin', 'Admin', 'Administrator', '$2y$10$nP8qd/wMRvtqHtc.ukF5d.zkDOQK9DJKLo.p4RaP3EgAMezJkwewS', 'notyujisandesu2@gmail.com');
 INSERT INTO `bcp_sms4_asset` (`asset_id`, `item_id`, `property_tag`, `status`, `location`, `assigned_to`, `date_registered`) VALUES
 (5, 2, 'ASSET-2025-0001', 'In-Use', NULL, NULL, '2025-09-20'),
 (6, 2, 'ASSET-2025-0002', 'In-Use', NULL, NULL, '2025-09-20'),
-(7, 2, 'ASSET-2025-0003', 'In-Use', NULL, NULL, '2025-09-20'),
-(8, 2, 'ASSET-2025-0004', 'In-Use', NULL, NULL, '2025-09-20'),
-(9, 2, 'ASSET-2025-0005', 'In-Use', NULL, NULL, '2025-09-20'),
-(10, 2, 'ASSET-2025-0006', 'In-Use', NULL, NULL, '2025-09-20'),
-(11, 2, 'ASSET-2025-0007', 'In-Use', NULL, NULL, '2025-09-20'),
-(12, 2, 'ASSET-2025-0008', 'In-Use', NULL, NULL, '2025-09-20'),
+(7, 2, 'ASSET-2025-0003', 'In-Storage', NULL, NULL, '2025-09-20'),
+(8, 2, 'ASSET-2025-0004', 'In-Storage', NULL, NULL, '2025-09-20'),
+(9, 2, 'ASSET-2025-0005', 'In-Storage', NULL, NULL, '2025-09-20'),
+(10, 2, 'ASSET-2025-0006', 'In-Use', NULL, '2', '2025-09-20'),
+(11, 2, 'ASSET-2025-0007', 'In-Storage', NULL, NULL, '2025-09-20'),
+(12, 2, 'ASSET-2025-0008', 'In-Use', NULL, '2', '2025-09-20'),
 (13, 2, 'ASSET-2025-0009', 'In-Use', NULL, NULL, '2025-09-20'),
 (14, 2, 'ASSET-2025-0010', 'In-Use', NULL, NULL, '2025-09-20'),
 (15, 2, 'ASSET-2025-0011', 'In-Use', NULL, NULL, '2025-09-20'),
@@ -395,7 +454,52 @@ INSERT INTO `bcp_sms4_asset` (`asset_id`, `item_id`, `property_tag`, `status`, `
 (208, 14, 'ASSET-2025-0204', 'In-Use', NULL, NULL, '2025-09-20'),
 (209, 14, 'ASSET-2025-0205', 'In-Use', NULL, NULL, '2025-09-20'),
 (210, 14, 'ASSET-2025-0206', 'In-Use', NULL, NULL, '2025-09-20'),
-(211, 14, 'ASSET-2025-0207', 'In-Use', NULL, NULL, '2025-09-20');
+(211, 14, 'ASSET-2025-0207', 'In-Use', NULL, NULL, '2025-09-20'),
+(212, 1, 'ASSET-2025-0208', 'In-Use', NULL, NULL, '2025-09-22'),
+(213, 1, 'ASSET-2025-0209', 'In-Use', NULL, NULL, '2025-09-22'),
+(214, 1, 'ASSET-2025-0210', 'In-Use', NULL, NULL, '2025-09-22'),
+(215, 1, 'ASSET-2025-0211', 'In-Use', NULL, NULL, '2025-09-22'),
+(216, 1, 'ASSET-2025-0212', 'In-Use', NULL, NULL, '2025-09-22'),
+(217, 3, 'ASSET-2025-0213', 'In-Use', NULL, NULL, '2025-09-22'),
+(218, 3, 'ASSET-2025-0214', 'In-Use', NULL, NULL, '2025-09-22'),
+(219, 3, 'ASSET-2025-0215', 'In-Use', NULL, NULL, '2025-09-22'),
+(220, 3, 'ASSET-2025-0216', 'In-Use', NULL, NULL, '2025-09-22'),
+(221, 3, 'ASSET-2025-0217', 'In-Use', NULL, NULL, '2025-09-22'),
+(222, 3, 'ASSET-2025-0218', 'In-Use', NULL, NULL, '2025-09-22'),
+(223, 3, 'ASSET-2025-0219', 'In-Use', NULL, NULL, '2025-09-22'),
+(224, 3, 'ASSET-2025-0220', 'In-Use', NULL, NULL, '2025-09-22'),
+(225, 3, 'ASSET-2025-0221', 'In-Use', NULL, NULL, '2025-09-22'),
+(226, 3, 'ASSET-2025-0222', 'In-Use', NULL, NULL, '2025-09-22'),
+(227, 1, 'ASSET-2025-0223', 'In-Use', NULL, NULL, '2025-09-22'),
+(228, 1, 'ASSET-2025-0224', 'In-Use', NULL, NULL, '2025-09-22'),
+(229, 1, 'ASSET-2025-0225', 'In-Use', NULL, NULL, '2025-09-22'),
+(230, 1, 'ASSET-2025-0226', 'In-Use', NULL, NULL, '2025-09-22'),
+(231, 1, 'ASSET-2025-0227', 'In-Use', NULL, NULL, '2025-09-22'),
+(232, 1, 'ASSET-2025-0228', 'In-Use', NULL, NULL, '2025-09-22'),
+(233, 1, 'ASSET-2025-0229', 'In-Use', NULL, NULL, '2025-09-22'),
+(234, 1, 'ASSET-2025-0230', 'In-Use', NULL, NULL, '2025-09-22'),
+(235, 1, 'ASSET-2025-0231', 'In-Use', NULL, NULL, '2025-09-22'),
+(236, 1, 'ASSET-2025-0232', 'In-Use', NULL, NULL, '2025-09-22'),
+(237, 2, 'ASSET-2025-0233', 'In-Use', NULL, NULL, '2025-09-22'),
+(238, 2, 'ASSET-2025-0234', 'In-Use', NULL, NULL, '2025-09-22'),
+(239, 2, 'ASSET-2025-0235', 'In-Use', NULL, NULL, '2025-09-22'),
+(240, 2, 'ASSET-2025-0236', 'In-Use', NULL, NULL, '2025-09-22'),
+(241, 2, 'ASSET-2025-0237', 'In-Use', NULL, NULL, '2025-09-22'),
+(242, 2, 'ASSET-2025-0238', 'In-Use', NULL, NULL, '2025-09-22'),
+(243, 2, 'ASSET-2025-0239', 'In-Use', NULL, NULL, '2025-09-22'),
+(244, 2, 'ASSET-2025-0240', 'In-Use', NULL, NULL, '2025-09-22'),
+(245, 2, 'ASSET-2025-0241', 'In-Use', NULL, NULL, '2025-09-22'),
+(246, 2, 'ASSET-2025-0242', 'In-Use', NULL, NULL, '2025-09-22'),
+(247, 2, 'ASSET-2025-0243', 'In-Use', NULL, NULL, '2025-09-22'),
+(248, 2, 'ASSET-2025-0244', 'In-Use', NULL, NULL, '2025-09-22'),
+(249, 2, 'ASSET-2025-0245', 'In-Use', NULL, NULL, '2025-09-22'),
+(250, 2, 'ASSET-2025-0246', 'In-Use', NULL, NULL, '2025-09-22'),
+(251, 2, 'ASSET-2025-0247', 'In-Use', NULL, NULL, '2025-09-22'),
+(252, 2, 'ASSET-2025-0248', 'In-Use', NULL, NULL, '2025-09-22'),
+(253, 2, 'ASSET-2025-0249', 'In-Use', NULL, NULL, '2025-09-22'),
+(254, 2, 'ASSET-2025-0250', 'In-Use', NULL, NULL, '2025-09-22'),
+(255, 2, 'ASSET-2025-0251', 'In-Use', NULL, NULL, '2025-09-22'),
+(256, 2, 'ASSET-2025-0252', 'In-Use', NULL, NULL, '2025-09-22');
 
 INSERT INTO `bcp_sms4_assign_history` (`id`, `reference_no`, `equipment_id`, `equipment_name`, `quantity`, `custodian_id`, `custodian_name`, `department_code`, `assigned_date`, `end_date`, `remarks`, `assigned_by`) VALUES
 (15, 'REF-20250912-4BE7C', '1234', 'Table', 1, 'EMP0069', 'Patrick', 'Information Technology', '2025-09-12 21:39:15', NULL, 'Ewan ko | Merged on 2025-09-12 21:24:33', 'admin'),
@@ -410,8 +514,19 @@ INSERT INTO `bcp_sms4_audit` (`id`, `audit_date`, `department`, `custodian`, `st
 (5, '2025-09-29', 'Information Technology', 'Custodian 5', 'Completed');
 
 INSERT INTO `bcp_sms4_consumable` (`id`, `item_id`, `unit`, `quantity`, `status`, `expiration`, `date_received`) VALUES
-(10, 11, 'pcs', 100, 'Available', '2026-09-20', '2025-09-20 14:41:46');
+(10, 11, 'pcs', 69, 'Available', '2026-09-20', '2025-09-20 14:41:46'),
+(16, 9, 'ream', 5, 'Available', '2026-09-22', '2025-09-22 20:56:43'),
+(17, 10, 'pcs', 50, 'Available', '2026-09-22', '2025-09-22 20:56:47'),
+(18, 11, 'pcs', 20, 'Available', '2026-09-22', '2025-09-22 20:56:52'),
+(19, 12, 'pcs', 0, 'Available', '2026-09-22', '2025-09-22 20:56:55'),
+(20, 14, 'bottle', 3, 'Available', '2026-09-22', '2025-09-22 20:57:02'),
+(21, 15, 'pcs', 2, 'Available', '2026-09-22', '2025-09-22 20:57:06'),
+(22, 16, 'set', 1, 'Available', '2026-09-22', '2025-09-22 20:57:09');
 
+INSERT INTO `bcp_sms4_issuance` (`id`, `reference_no`, `request_id`, `equipment_id`, `item_name`, `category`, `quantity`, `teacher_id`, `department_code`, `issued_by`, `assigned_date`, `end_date`, `remarks`) VALUES
+(1, 'ISS-20250924151159-F9FCAD', 11, 10, 'Student Armchair', 'Asset', 1, 2, NULL, 3, '2025-09-24 23:11:59', NULL, NULL),
+(2, 'ISS-20250924151452-C0EBB0', 10, 12, 'Student Armchair', 'Asset', 1, 2, NULL, 3, '2025-09-24 23:14:52', NULL, NULL),
+(3, 'ISS-20250924151531-39EEDA', 12, 10, 'Whiteboard Marker (Black)', 'Consumable', 19, 2, NULL, 3, '2025-09-24 23:15:31', NULL, NULL);
 INSERT INTO `bcp_sms4_items` (`item_id`, `item_name`, `category`, `item_type`, `unit`) VALUES
 (1, 'Teacher’s Desk', 'Furniture', 'Asset', 'pcs'),
 (2, 'Student Armchair', 'Furniture', 'Asset', 'pcs'),
@@ -432,9 +547,9 @@ INSERT INTO `bcp_sms4_items` (`item_id`, `item_name`, `category`, `item_type`, `
 INSERT INTO `bcp_sms4_procurement` (`procurement_id`, `item_id`, `quantity`, `request_date`, `requested_by`, `approved_by`, `expected_date`, `reason`, `status`, `created_at`) VALUES
 (1, 1, 5, '2025-09-01', 'Faculty Office', NULL, NULL, 'For new faculty computers', 'Completed', '2025-09-20 13:39:38'),
 (2, 2, 20, '2025-09-02', 'Registrar', NULL, NULL, 'Replacement of broken chairs', 'Completed', '2025-09-20 13:39:38'),
-(3, 3, 10, '2025-09-03', 'Library', NULL, NULL, 'Additional tables for study area', 'Completed', '2025-09-20 13:39:38'),
-(4, 4, 2, '2025-09-05', 'IT Department', NULL, NULL, 'Backup projector units', 'Completed', '2025-09-20 13:39:38'),
-(5, 5, 50, '2025-09-06', 'Accounting', NULL, NULL, 'Monthly supply of bond paper', 'Completed', '2025-09-20 13:39:38'),
+(3, 3, 10, '2025-09-03', 'Library', NULL, NULL, 'Additional tables for study area', 'Pending', '2025-09-20 13:39:38'),
+(4, 4, 2, '2025-09-05', 'IT Department', NULL, NULL, 'Backup projector units', 'Rejected', '2025-09-20 13:39:38'),
+(5, 5, 50, '2025-09-06', 'Accounting', NULL, NULL, 'Monthly supply of bond paper', 'Rejected', '2025-09-20 13:39:38'),
 (6, 6, 100, '2025-09-07', 'Faculty Office', NULL, NULL, 'Whiteboard markers for classrooms', 'Completed', '2025-09-20 13:39:38'),
 (7, 7, 30, '2025-09-08', 'Clinic', NULL, NULL, 'Alcohol bottles for disinfection', 'Completed', '2025-09-20 13:39:38'),
 (8, 8, 10, '2025-09-09', 'Admin Office', NULL, NULL, 'Printer ink cartridges', 'Completed', '2025-09-20 13:39:38'),
@@ -444,10 +559,39 @@ INSERT INTO `bcp_sms4_procurement` (`procurement_id`, `item_id`, `quantity`, `re
 (12, 13, 10, '2025-09-13', 'Clinic', NULL, NULL, 'For cleaning and sanitation', 'Completed', '2025-09-20 16:30:00'),
 (13, 14, 30, '2025-09-14', 'Admin Office', NULL, NULL, 'Printer ink refills', 'Completed', '2025-09-20 16:40:00'),
 (14, 15, 15, '2025-09-15', 'Accounting', NULL, NULL, 'Toner replacement for reports', 'Completed', '2025-09-20 16:50:00'),
-(15, 16, 5, '2025-09-16', 'Clinic', NULL, NULL, 'Restock of medical supplies', 'Completed', '2025-09-20 17:00:00');
+(15, 16, 5, '2025-09-16', 'Clinic', NULL, NULL, 'Restock of medical supplies', 'Completed', '2025-09-20 17:00:00'),
+(21, 9, 5, '2025-09-20', 'Alice', 'Bob', '2025-09-25', 'Restock bond papers', 'Completed', '2025-09-20 14:41:46'),
+(22, 10, 50, '2025-09-21', 'Charlie', 'Dana', '2025-09-26', 'Blue ballpoint pens for classroom', 'Completed', '2025-09-21 09:30:00'),
+(23, 11, 20, '2025-09-22', 'Eve', NULL, '2025-09-28', 'Whiteboard markers for meetings', 'Completed', '2025-09-22 10:15:00'),
+(24, 12, 10, '2025-09-23', 'Frank', 'Grace', '2025-09-29', 'Mops for janitorial team', 'Completed', '2025-09-23 11:20:00'),
+(25, 13, 5, '2025-09-24', 'Heidi', 'Ivan', '2025-09-30', 'Disinfectants for sanitization', 'Completed', '2025-09-24 12:00:00'),
+(26, 14, 3, '2025-09-25', 'Jack', 'Kate', '2025-10-01', 'Printer ink for office printers', 'Completed', '2025-09-25 08:45:00'),
+(27, 15, 2, '2025-09-26', 'Leo', NULL, '2025-10-02', 'Toner cartridges for printer', 'Completed', '2025-09-26 09:15:00'),
+(28, 16, 1, '2025-09-27', 'Mia', 'Nina', '2025-10-03', 'First aid kit for clinic', 'Completed', '2025-09-27 10:00:00');
 INSERT INTO `bcp_sms4_reports` (`id`, `report_type`, `reported_by`, `assigned_to`, `date_reported`, `status`, `description`, `evidence`, `asset_id`) VALUES
-(13, 'Lost', 2, NULL, '2025-09-20 17:36:23', 'Pending', 'aw', NULL, 5),
-(14, 'Damaged', 2, NULL, '2025-09-20 17:39:11', 'Pending', 'aw', NULL, 7);
+(13, 'Lost', 2, NULL, '2025-09-24 01:35:36', 'In-Progress', 'aw', NULL, 5),
+(14, 'Damaged', 2, NULL, '2025-09-20 17:39:11', 'Pending', 'aw', NULL, 7),
+(15, 'Damaged', 2, NULL, '2025-09-24 01:35:41', 'Resolved', 'Sirang sira na body clock ko, jusko', NULL, 246),
+(16, 'Repair/Replacement', 2, NULL, '2025-09-24 01:18:02', 'Pending', '', NULL, 46),
+(17, 'Repair/Replacement', 2, NULL, '2025-09-24 01:35:45', 'Resolved', '', NULL, 198),
+(18, 'Lost', 2, 4, '2025-09-24 18:54:43', 'Resolved', '', NULL, 7),
+(19, 'Damaged', 2, 4, '2025-09-24 18:54:49', 'Rejected', '', NULL, 73),
+(20, 'Repair/Replacement', 2, 4, '2025-09-24 19:30:51', 'Resolved', '', NULL, 165),
+(21, 'Repair/Replacement', 2, 4, '2025-09-24 18:53:34', 'Resolved', '', NULL, 97),
+(22, 'Lost', 2, NULL, '2025-09-24 21:01:32', 'Pending', 'aw', NULL, 5);
+INSERT INTO `bcp_sms4_requests` (`request_id`, `teacher_id`, `asset_id`, `consumable_id`, `quantity`, `request_type`, `notes`, `status`, `date_requested`) VALUES
+(1, 2, NULL, 10, 1, 'Consumable', '', 'Approved', '2025-09-24 20:28:51'),
+(2, 2, 12, NULL, 1, 'Asset', '', 'Rejected', '2025-09-24 20:32:15'),
+(3, 2, 7, NULL, 1, 'Asset', '', 'Rejected', '2025-09-24 21:11:28'),
+(4, 2, NULL, 19, 10, 'Consumable', '', 'Approved', '2025-09-24 21:11:50'),
+(5, 2, NULL, 10, 11, 'Consumable', '', 'Approved', '2025-09-24 22:21:21'),
+(6, 2, 5, NULL, 1, 'Asset', '', 'Approved', '2025-09-24 22:41:22'),
+(7, 2, 6, NULL, 1, 'Asset', '', 'Approved', '2025-09-24 22:41:26'),
+(8, 2, 5, NULL, 1, 'Asset', '', 'Pending', '2025-09-24 23:11:43'),
+(9, 2, 9, NULL, 1, 'Asset', '', 'Pending', '2025-09-24 23:11:48'),
+(10, 2, 12, NULL, 1, 'Asset', '', 'Approved', '2025-09-24 23:11:51'),
+(11, 2, 10, NULL, 1, 'Asset', '', 'Approved', '2025-09-24 23:11:54'),
+(12, 2, NULL, 10, 19, 'Consumable', '', 'Approved', '2025-09-24 23:15:20');
 INSERT INTO `bcp_sms4_scheduling` (`id`, `asset`, `type`, `frequency`, `personnel`, `start_date`, `created_at`, `status`) VALUES
 (5, 'Air Conditioner', 'Cleaning', 'Weekly', 'Juan Delacruz', '2025-09-10', '2025-09-09 03:24:14', 'Scheduled'),
 (6, 'Air Conditioner', 'Inspection', 'Weekly', 'sdsd', '2025-09-10', '2025-09-09 03:30:24', 'Scheduled'),
