@@ -1,5 +1,5 @@
 let scheduleDates = [];
-let scheduleData = {}; // Store complete schedule data
+let scheduleData = {}; 
 let pendingScheduleData = null; 
 
 const dateObj = new Date();

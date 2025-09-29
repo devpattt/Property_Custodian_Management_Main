@@ -168,7 +168,6 @@ if ($result && $result->num_rows > 0) {
   </div>
 </div>
 
-<!-- Vendor Scripts -->
 <a href="#" class="back-to-top d-flex align-items-center justify-content-center">
   <i class="bi bi-arrow-up-short"></i>
 </a>
@@ -181,8 +180,6 @@ if ($result && $result->num_rows > 0) {
 <script src="../../assets/vendor/tinymce/tinymce.min.js"></script>
 <script src="../../assets/vendor/php-email-form/validate.js"></script>
 <script src="../../assets/js/main.js"></script>
-
-<!-- Custom Scripts -->
 <script src="../../assets/js/procurement.js"></script>
 <script src="../../assets/js/procurement-update.js"></script>
 

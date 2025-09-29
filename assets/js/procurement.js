@@ -1,12 +1,10 @@
 const rowsPerPage = 5;
 let currentPage = 1;
 
-// ❗ IMPORTANT: Update this path to your actual report script filename/location
 const REPORT_SCRIPT_PATH = 'report.php'; 
 
 // ---------------- Pagination ----------------
 function paginateTable() {
-    // ... (Your existing paginateTable function body)
     const rows = document.querySelectorAll("#deliveryTable tbody tr");
     const totalPages = Math.ceil(rows.length / rowsPerPage);
     rows.forEach((row, idx) => {
@@ -22,9 +20,8 @@ function paginateTable() {
 }
 
 function renderPagination(total, containerId, onClick) {
-    // ... (Your existing renderPagination function body)
     const container = document.getElementById(containerId);
-    if (!container) return; // Add a check in case pagination container doesn't exist
+    if (!container) return; 
     container.innerHTML = "";
     for (let i = 1; i <= total; i++) {
         const btn = document.createElement("button");
@@ -73,7 +70,6 @@ function toggleView() {
 }
 
 function renderGrid() {
-    // ... (Your existing renderGrid function body)
     const grid = document.getElementById("gridContent");
     grid.innerHTML = "";
     const rows = document.querySelectorAll("#deliveryTable tbody tr");
@@ -100,11 +96,8 @@ function renderGrid() {
 
 // ---------------- Report Modal Functions ----------------
 
-// Function to generate the report content via AJAX and trigger printing
 function generateReport(type) {
     let reportUrl = '';
-    
-    // Determine the URL and parameters (logic remains the same)
     if (type === 'month') {
         const monthInput = document.getElementById('reportMonthInput');
         const monthValue = monthInput ? monthInput.value : '';
@@ -121,14 +114,12 @@ function generateReport(type) {
         return; 
     }
 
-    // 1. Close the selection modals (if they are open)
     const allModals = document.querySelectorAll('.modal.show');
     allModals.forEach(modalEl => {
          const modalInstance = bootstrap.Modal.getInstance(modalEl);
          if (modalInstance) modalInstance.hide();
     });
     
-    // 2. Fetch the report content
     fetch(reportUrl)
         .then(response => {
             if (!response.ok) {
@@ -137,7 +128,6 @@ function generateReport(type) {
             return response.text();
         })
         .then(reportHtml => {
-            // 3. Pass the content to the printing function
             printReport(reportHtml);
         })
         .catch(error => {
@@ -149,16 +139,14 @@ function generateReport(type) {
 /**
  * Creates a temporary, hidden iframe, injects the report HTML,
  * triggers printing, and then removes the iframe.
- * @param {string} htmlContent - The HTML fragment to print (the table).
+ * @param {string} htmlContent 
  */
 function printReport(htmlContent) {
     const iframe = document.createElement('iframe');
-    iframe.style.display = 'none'; // Keep it hidden
+    iframe.style.display = 'none'; 
     document.body.appendChild(iframe);
     
     const iframeDoc = iframe.contentWindow.document;
-
-    // Use Bootstrap styles for formatting, and hide elements that shouldn't print
     const bootstrapCss = document.querySelector('link[href*="bootstrap.min.css"]')?.href || '';
     
     iframeDoc.open();
@@ -184,16 +172,13 @@ function printReport(htmlContent) {
     `);
     iframeDoc.close();
 
-    // Wait for the iframe to load the content and CSS before printing
     iframe.onload = function() {
         try {
-            // Trigger the native print dialog
-            iframe.contentWindow.focus(); // Must focus before print
+            iframe.contentWindow.focus(); 
             iframe.contentWindow.print();
         } catch (e) {
             console.error("Print failed:", e);
         } finally {
-            // Give the browser a moment to process the print dialog, then remove the iframe
             setTimeout(() => {
                 document.body.removeChild(iframe);
             }, 1000); 
@@ -204,7 +189,6 @@ function printReport(htmlContent) {
 
 // ---------------- Initialization ----------------
 document.addEventListener('DOMContentLoaded', function() {
-    // Event listener for the simple buttons (Today/Week) in the main modal
     const simpleTriggers = document.querySelectorAll('#reportModal .report-trigger');
     simpleTriggers.forEach(button => {
         button.addEventListener('click', function() {
@@ -212,7 +196,6 @@ document.addEventListener('DOMContentLoaded', function() {
             generateReport(reportType);
         });
     });
-    
-    // Initial call to set up the pagination/view
+
     paginateTable(); 
 });
