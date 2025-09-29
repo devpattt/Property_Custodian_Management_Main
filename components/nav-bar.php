@@ -164,7 +164,7 @@ $userId = $_SESSION['user_id'] ?? 'N/A';
 
           <!-- Custodian Assignment & Transfer -->
           <?php 
-            $custodian_pages = ['charts-chartjs.html','charts-apexcharts.html','charts-echarts.html']; 
+            $custodian_pages = ['transfer_custodian.php']; 
             $is_custodian_active = in_array($current_page, $custodian_pages);
           ?>
           <li class="nav-item">
@@ -181,7 +181,7 @@ $userId = $_SESSION['user_id'] ?? 'N/A';
                 </a>
               </li>
               <li>
-                <a href="charts-apexcharts.html" class="<?= $current_page == 'charts-apexcharts.html' ? 'active' : '' ?>">
+              <a href="<?=BASE_URL?>User_Admin/custodian_transfer/transfer_custodian.php" class="<?= $current_page == 'transfer_custodian.php' ? 'active' : '' ?>">
                   <i class="bi bi-circle"></i><span>Asset Transfer</span>
                 </a>
               </li>
