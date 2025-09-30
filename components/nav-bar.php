@@ -161,33 +161,6 @@ $userId = $_SESSION['user_id'] ?? 'N/A';
               </li>
             </ul>
           </li>
-
-          <!-- Custodian Assignment & Transfer -->
-          <?php 
-            $custodian_pages = ['transfer_custodian.php']; 
-            $is_custodian_active = in_array($current_page, $custodian_pages);
-          ?>
-          <li class="nav-item">
-            <a class="nav-link collapsed <?= $is_custodian_active ? 'active' : '' ?>" 
-              data-bs-target="#charts-nav" data-bs-toggle="collapse" href="#">
-              <i class="bi bi-bar-chart"></i>
-              <span>Custodian History & Transfer</span>
-              <i class="bi bi-chevron-down ms-auto"></i>
-            </a>
-            <ul id="charts-nav" class="nav-content collapse <?= $is_custodian_active ? 'show' : '' ?>" data-bs-parent="#sidebar-nav">
-              <li>
-                <a href="charts-chartjs.html" class="<?= $current_page == 'charts-chartjs.html' ? 'active' : '' ?>">
-                  <i class="bi bi-circle"></i><span>Custodian History</span>
-                </a>
-              </li>
-              <li>
-              <a href="<?=BASE_URL?>User_Admin/custodian_transfer/transfer_custodian.php" class="<?= $current_page == 'transfer_custodian.php' ? 'active' : '' ?>">
-                  <i class="bi bi-circle"></i><span>Asset Transfer</span>
-                </a>
-              </li>
-            </ul>
-          </li>
-
           <!-- Supplies Inventory Management -->
           <?php 
             $supplies_pages = ['inventory.php']; 

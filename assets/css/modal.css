@@ -71,3 +71,8 @@ input:focus {
 .btn-save:active {
   transform: scale(0.97);
 }
+
+.custom-modal-xl {
+    max-width: 1600px; /* adjust as needed */
+    width: 95%;        /* take almost full width of screen */
+}
