@@ -74,11 +74,6 @@ $result = $stmt->get_result();
           <div class="card">
             <div class="card-body">
               <h5 class="card-title">Reports Table</h5>
-              <?php if(isset($_GET['updated'])): ?>
-                <div class="alert alert-success">
-                  Item Updated Successfully!!!
-                </div>
-              <?php endif; ?>
               <table class="table datatable">
                 <thead>
                   <tr>
@@ -153,6 +148,36 @@ $result = $stmt->get_result();
     </div>
   </div>
 </div>
+
+<!-- Toast container -->
+<div class="toast-container position-fixed top-0 end-0 p-3" style="margin-top: 60px; z-index: 2000;">
+  <div id="updateToast" class="toast align-items-center text-bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true">
+    <div class="d-flex">
+      <div class="toast-body">Report updated successfully!</div>
+      <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+    </div>
+  </div>
+
+  <div id="errorToast" class="toast align-items-center text-bg-danger border-0" role="alert" aria-live="assertive" aria-atomic="true">
+    <div class="d-flex">
+      <div class="toast-body">Failed to update report.</div>
+      <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+    </div>
+  </div>
+</div>
+
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const urlParams = new URLSearchParams(window.location.search);
+
+      if (urlParams.get("updated") === "1") {
+        new bootstrap.Toast(document.getElementById("updateToast"), { delay: 2000 }).show();
+      } else if (urlParams.get("updated") === "0") {
+        new bootstrap.Toast(document.getElementById("errorToast"), { delay: 2000 }).show();
+      }
+    });
+</script>
 
 <script>
 document.addEventListener("DOMContentLoaded", function() {

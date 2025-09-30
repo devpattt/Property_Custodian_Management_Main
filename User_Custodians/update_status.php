@@ -13,16 +13,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $valid_statuses = ['Pending', 'In-Progress', 'Resolved', 'Rejected'];
     if (!in_array($status, $valid_statuses)) {
-        exit("Invalid status value.");
+        header("Location: custodian_reports.php?updated=0");
+        exit;
     }
 
     $stmt = $conn->prepare("UPDATE bcp_sms4_reports SET status = ?, date_reported = NOW() WHERE id = ? AND assigned_to = ?");
     $stmt->bind_param("sii", $status, $report_id, $user_id);
 
     if ($stmt->execute()) {
-        header("Location: custodian_reports.php?success=1");
+        header("Location: custodian_reports.php?updated=1");
+        exit;
     } else {
-        echo "error: " . $stmt->error;
+        header("Location: custodian_reports.php?updated=0"); 
+        exit;
     }
 }
 ?>
