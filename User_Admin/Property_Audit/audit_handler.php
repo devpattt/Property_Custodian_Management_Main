@@ -1,218 +1,127 @@
-    <?php
-      include '../../connection.php';
-      $auditorName = isset($_SESSION['user_name']) ? $_SESSION['user_name'] : (isset($_SESSION['username']) ? $_SESSION['username'] : 'Admin');
+   <?php
+include '../../connection.php';
+session_start();
 
-      if (isset($_POST['schedule_audit'])) {
-          $audit_date = $_POST['audit_date'];
-          $department_code = $_POST['department_code']; 
-          $custodian = $_POST['custodian'];
+$auditorName = $_SESSION['user_name'] ?? $_SESSION['username'] ?? 'Admin';
 
-          $stmt = $conn->prepare("INSERT INTO bcp_sms4_audit (audit_date, department_code, custodian, status) VALUES (?, ?, ?, 'Scheduled')");
-          $stmt->bind_param("sss", $audit_date, $department_code, $custodian);
-          $stmt->execute();
-          $stmt->close();
-          
-          echo "<script>
-              window.addEventListener('load', function() {
-                  showToast('Audit scheduled successfully!', 'success');
-              });
-          </script>";
-      }
+// Schedule audit
+if (isset($_POST['schedule_audit'])) {
+    $audit_date = $_POST['audit_date'];
+    $department_id = $_POST['department_id']; 
+    $custodian_id = $_POST['custodian_id'];
 
-      if (isset($_POST['start_audit_id'])) {
-          $aid = intval($_POST['start_audit_id']);
-          $stmt = $conn->prepare("UPDATE bcp_sms4_audit SET status = 'Ongoing' WHERE id = ?");
-          $stmt->bind_param("i", $aid);
-          $stmt->execute();
-          $stmt->close();
-          
-          $res = $conn->query("SELECT department_code FROM bcp_sms4_audit WHERE id = {$aid} LIMIT 1");
-          $dep = $res && $res->num_rows > 0 ? $res->fetch_assoc()['department_code'] : null;
+    $stmt = $conn->prepare("INSERT INTO bcp_sms4_audit (audit_date, department_id, custodian_id, status) VALUES (?, ?, ?, 'Scheduled')");
+    $stmt->bind_param("sii", $audit_date, $department_id, $custodian_id);
+    $stmt->execute();
+    $stmt->close();
 
-          $_SESSION['current_audit'] = $aid;
-          $_SESSION['current_department'] = $dep;
-          
-          echo "<script>
-              window.addEventListener('load', function() {
-                  showToast('Audit #{$aid} started!', 'info');
-                  setTimeout(function() {
-                      document.getElementById('session-tab').click();
-                  }, 1000);
-              });
-          </script>";
-      }
+    echo "<script>
+        window.addEventListener('load', function() {
+            showToast('Audit scheduled successfully!', 'success');
+        });
+    </script>";
+}
 
-    if (isset($_POST['end_audit'])) {
-        $audit_id = intval($_POST['audit_id']);
+// Start audit
+if (isset($_POST['start_audit_id'])) {
+    $aid = intval($_POST['start_audit_id']);
+    $stmt = $conn->prepare("UPDATE bcp_sms4_audit SET status = 'Ongoing' WHERE id = ?");
+    $stmt->bind_param("i", $aid);
+    $stmt->execute();
+    $stmt->close();
 
-        $sql = "SELECT department_code, audit_date, custodian 
-                FROM bcp_sms4_audit WHERE id = ?";
-        $stmt = $conn->prepare($sql);
+    $res = $conn->query("SELECT department_id FROM bcp_sms4_audit WHERE id = {$aid} LIMIT 1");
+    $dep_id = $res && $res->num_rows > 0 ? $res->fetch_assoc()['department_id'] : null;
 
-        if (!$stmt) {
-            echo "<script>
-                window.addEventListener('load', function() {
-                    showToast('Error preparing audit query: " . addslashes($conn->error) . "', 'danger');
-                });
-            </script>";
-        } else {
-            $stmt->bind_param("i", $audit_id);
-            $stmt->execute();
-            $audit = $stmt->get_result()->fetch_assoc();
-            $stmt->close();
-        }
+    $_SESSION['current_audit'] = $aid;
+    $_SESSION['current_department'] = $dep_id;
 
-        if ($audit) {
+    echo "<script>
+        window.addEventListener('load', function() {
+            showToast('Audit #{$aid} started!', 'info');
+        });
+    </script>";
+}
+
+// End audit
+if (isset($_POST['end_audit'])) {
+    $audit_id = intval($_POST['audit_id']);
+
+    $stmt = $conn->prepare("SELECT department_id, audit_date, custodian_id FROM bcp_sms4_audit WHERE id = ?");
+    $stmt->bind_param("i", $audit_id);
+    $stmt->execute();
+    $audit = $stmt->get_result()->fetch_assoc();
+    $stmt->close();
+
+    if ($audit) {
         try {
-
             $conn->begin_transaction();
 
             $started_date = date("Y-m-d H:i:s", strtotime($audit['audit_date']));
 
-            $insertHistory = "INSERT INTO bcp_sms4_audit_history 
-                             (audit_id, department_code, started_date, completed_date, status, remarks) 
-                             VALUES (?, ?, ?, NOW(), 'Completed', ?)";
-            $stmt2 = $conn->prepare($insertHistory);
-
-            if (!$stmt2) {
-                throw new Exception("Failed to prepare history insert: " . $conn->error);
-            }
-
-            $remarks = "Audit completed by " . $auditorName . " for department " . $audit['department_code'];
-            $stmt2->bind_param("isss", $audit_id, $audit['department_code'], $started_date, $remarks);
-
-            if (!$stmt2->execute()) {
-                throw new Exception("History insert failed: " . $stmt2->error);
-            }
+            $stmt2 = $conn->prepare("INSERT INTO bcp_sms4_audit_history 
+                                     (audit_id, department_id, started_date, completed_date, status, remarks) 
+                                     VALUES (?, ?, ?, NOW(), 'Completed', ?)");
+            $remarks = "Audit completed by {$auditorName} for department {$audit['department_id']}";
+            $stmt2->bind_param("iis", $audit_id, $audit['department_id'], $remarks);
+            $stmt2->execute();
             $history_id = $stmt2->insert_id;
             $stmt2->close();
 
-            if (isset($_POST['status']) && !empty($_POST['status'])) {
-                $findingInsertStmt = $conn->prepare("INSERT INTO bcp_sms4_audit_findings 
-                                                    (history_id, asset_id, asset_name, quantity, finding_status, asset_condition, remarks) 
-                                                    VALUES (?, ?, ?, ?, ?, ?, ?)");
+            $updateAuditStmt = $conn->prepare("UPDATE bcp_sms4_audit SET status = 'Completed' WHERE id = ?");
+            $updateAuditStmt->bind_param("i", $audit_id);
+            $updateAuditStmt->execute();
+            $updateAuditStmt->close();
 
-                foreach ($_POST['status'] as $asset_id => $finding_status) {
-                    $asset_condition = $_POST['asset_condition'][$asset_id] ?? 'Good';
-                    $remarks   = $_POST['remarks'][$asset_id] ?? '';
+            $conn->commit();
 
-                    $assetQuery = $conn->prepare("SELECT item_name, quantity FROM bcp_sms4_issuance WHERE id = ?");
-                    $assetQuery->bind_param("i", $asset_id);
-                    $assetQuery->execute();
-                    $asset = $assetQuery->get_result()->fetch_assoc();
-                    $assetQuery->close();
+            unset($_SESSION['current_audit']);
+            unset($_SESSION['current_department']);
 
-                    if ($asset) {
-                        $findingInsertStmt->bind_param(
-                            "iisiiss", 
-                            $history_id, 
-                            $asset_id, 
-                            $asset['item_name'], 
-                            $asset['quantity'], 
-                            $finding_status, 
-                            $asset_condition, 
-                            $remarks
-                        );
+            echo "<script>
+                window.addEventListener('load', function() {
+                    showToast('Audit #{$audit_id} completed successfully!', 'success');
+                });
+            </script>";
 
-                        if (!$findingInsertStmt->execute()) {
-                            throw new Exception("Finding insert failed: " . $findingInsertStmt->error);
-                        }
+        } catch (Exception $e) {
+            $conn->rollback();
+            echo "<script>
+                window.addEventListener('load', function() {
+                    showToast('Error ending audit: " . addslashes($e->getMessage()) . "', 'danger');
+                });
+            </script>";
+        }
+    } else {
+        echo "<script>
+            window.addEventListener('load', function() {
+                showToast('Audit not found!', 'danger');
+            });
+        </script>";
+    }
+}
 
-                        if ($finding_status !== 'Valid' || $asset_condition !== 'Good') {
-                            $checkDiscTable = $conn->query("SHOW TABLES LIKE 'bcp_sms4_audit_discrepancies'");
-                            if ($checkDiscTable->num_rows == 0) {
-                                $createDiscTable = "CREATE TABLE bcp_sms4_audit_discrepancies (
-                                    discrepancy_id INT AUTO_INCREMENT PRIMARY KEY,
-                                    asset_tag VARCHAR(100),
-                                    issue TEXT,
-                                    resolved TINYINT DEFAULT 0,
-                                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                                )";
-                                $conn->query($createDiscTable);
-                            }
+// Counts
+$upcoming_audits = $conn->query("SELECT COUNT(*) as total FROM bcp_sms4_audit WHERE audit_date >= CURDATE() AND status != 'Completed'")->fetch_assoc()['total'] ?? 0;
+$last_discrepancies = $conn->query("SELECT COUNT(*) as total FROM bcp_sms4_audit_discrepancies WHERE resolved = 0")->fetch_assoc()['total'] ?? 0;
+$pending_replacements = $conn->query("SELECT COUNT(*) as total FROM bcp_sms4_procurement WHERE status = 'Pending'")->fetch_assoc()['total'] ?? 0;
 
-                         $discrepancyStmt = $conn->prepare("INSERT INTO bcp_sms4_audit_discrepancies 
-                            (audit_type, audit_id, description, resolved, created_at) 
-                            VALUES (?, ?, ?, 0, NOW())");
-
-                        if ($discrepancyStmt) {
-                            $audit_type = 'Asset'; 
-                            $description = "Status: " . $finding_status . ", Condition: " . $asset_condition;
-                            if (!empty($remarks)) {
-                                $description .= " - " . $remarks;
-                            }
-
-                            $discrepancyStmt->bind_param("sis", $audit_type, $asset_id, $description);
-                            $discrepancyStmt->execute();
-                            $discrepancyStmt->close();
-                        }
-                        }
-                    }
-                }
-                $findingInsertStmt->close();
-            }
-
-                  $updateAuditStmt = $conn->prepare("UPDATE bcp_sms4_audit SET status = 'Completed' WHERE id = ?");
-                  $updateAuditStmt->bind_param("i", $audit_id);
-                  $updateAuditStmt->execute();
-                  $updateAuditStmt->close();
-                  $conn->commit();
-
-                  unset($_SESSION['current_audit']);
-                  unset($_SESSION['current_department']);
-
-                  echo "<script>
-                      window.addEventListener('load', function() {
-                          showToast('Audit #{$audit_id} completed successfully! Data moved to audit history.', 'success');
-                      });
-                  </script>";
-
-              } catch (Exception $e) {
-                  $conn->rollback();
-                  echo "<script>
-                      window.addEventListener('load', function() {
-                          showToast('Error ending audit: " . addslashes($e->getMessage()) . "', 'danger');
-                      });
-                  </script>";
-              }
-          } else {
-              echo "<script>
-                  window.addEventListener('load', function() {
-                      showToast('Audit not found!', 'danger');
-                  });
-              </script>";
-          }
-      }
-
-      $upcoming_audits = 0;
-      $result = $conn->query("SELECT COUNT(*) as total FROM bcp_sms4_audit WHERE audit_date >= CURDATE() AND status != 'Completed'");
-      if ($result && $row = $result->fetch_assoc()) {
-          $upcoming_audits = $row['total'];
-      }
-
-      $last_discrepancies = 0;
-      $result = $conn->query("SELECT COUNT(*) as total FROM bcp_sms4_audit_discrepancies WHERE resolved = 0");
-      if ($result && $row = $result->fetch_assoc()) {
-          $last_discrepancies = $row['total'];
-      }
-
-      $pending_replacements = 0;
-      $result = $conn->query("SELECT COUNT(*) as total FROM bcp_sms4_procurement WHERE status = 'Pending'");
-      if ($result && $row = $result->fetch_assoc()) {
-          $pending_replacements = $row['total'];
-      }
-
-      $current_audit_label = 'None';
-      if (isset($_SESSION['current_audit'])) {
-          $aid = intval($_SESSION['current_audit']);
-          $r = $conn->query("SELECT id, audit_date, department_code, custodian FROM bcp_sms4_audit WHERE id = {$aid}")->fetch_assoc();
-          if ($r) {
-              $current_audit_label = "Audit #{$r['id']} — {$r['audit_date']} ({$r['department_code']} / {$r['custodian']})";
-          } else {
-              unset($_SESSION['current_audit']);
-              unset($_SESSION['current_department']);
-          }
-      }
+// Current audit label
+$current_audit_label = 'None';
+if (isset($_SESSION['current_audit'])) {
+    $aid = intval($_SESSION['current_audit']);
+    $r = $conn->query("SELECT a.id, a.audit_date, d.dept_name, ad.fullname 
+                       FROM bcp_sms4_audit a
+                       LEFT JOIN bcp_sms4_departments d ON a.department_id = d.id
+                       LEFT JOIN bcp_sms4_admins ad ON a.custodian_id = ad.id
+                       WHERE a.id = {$aid}")->fetch_assoc();
+    if ($r) {
+        $current_audit_label = "Audit #{$r['id']} — {$r['audit_date']} ({$r['dept_name']} / {$r['fullname']})";
+    } else {
+        unset($_SESSION['current_audit']);
+        unset($_SESSION['current_department']);
+    }
+}
 
       if (isset($_POST['discrepancy_id'])) {
           $discrepancy_id = intval($_POST['discrepancy_id']);

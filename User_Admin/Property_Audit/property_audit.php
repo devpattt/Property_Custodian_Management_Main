@@ -248,17 +248,27 @@ session_start();
                           </div>
                         <div class="mb-3">
                             <label>Department</label>
-                            <select name="department_code" class="form-control" required>
-                              <option value="">-- Select Department --</option>
-                              <option value="BSIT">BSIT</option>
-                              <option value="CRIM">CRIM</option>
-                              <option value="BADTRIP">BADTRIP</option>
-                              <option value="BS PHCYHOLOGY">BS PHCYHOLOGY</option>
+                            <select name="department_id" class="form-control" required>
+                                <option value="">-- Select Department --</option>
+                                <?php
+                                $departments = $conn->query("SELECT id, dept_name FROM bcp_sms4_departments ORDER BY dept_name ASC");
+                                while($dept = $departments->fetch_assoc()){
+                                    echo "<option value='{$dept['id']}'>{$dept['dept_name']}</option>";
+                                }
+                                ?>
                             </select>
                           </div>
                           <div class="mb-3">
                             <label>Custodian</label>
-                            <input type="text" name="custodian" class="form-control" required>
+                              <select name="custodian_id" class="form-control" required>
+                                  <option value="">-- Select Custodian --</option>
+                                  <?php
+                                  $custodians = $conn->query("SELECT id, fullname FROM bcp_sms4_admins WHERE user_type='custodian' ORDER BY fullname ASC");
+                                  while ($cust = $custodians->fetch_assoc()) {
+                                      echo "<option value='{$cust['id']}'>{$cust['fullname']}</option>";
+                                  }
+                                  ?>
+                              </select>
                           </div>
                         </div>
                         <div class="modal-footer">
@@ -283,15 +293,23 @@ session_start();
                   </thead>
                   <tbody>
                     <?php
-                    $audits = $conn->query("SELECT * FROM bcp_sms4_audit ORDER BY audit_date DESC");
+                        $audits = $conn->query("
+                            SELECT a.id, a.audit_date, a.status,
+                                  d.dept_name, 
+                                  ad.fullname AS custodian_name
+                            FROM bcp_sms4_audit a
+                            JOIN bcp_sms4_departments d ON a.department_id = d.id
+                            JOIN bcp_sms4_admins ad ON a.custodian_id = ad.id
+                            ORDER BY a.audit_date DESC
+                        ");
                     if ($audits && $audits->num_rows > 0):
                         while ($row = $audits->fetch_assoc()):
                     ?>
                         <tr>
                           <td><?= $row['id'] ?></td>
                           <td><?= $row['audit_date'] ?></td>
-                          <td><?= htmlspecialchars($row['department_code']) ?></td>
-                          <td><?= htmlspecialchars($row['custodian']) ?></td>
+                          <td><?= htmlspecialchars($row['dept_name'] ?? 'N/A') ?></td>
+                          <td><?= htmlspecialchars($row['custodian_name'] ?? 'N/A') ?></td>
                           <td>
                             <?php if ($row['status'] == 'Ongoing'): ?>
                               <span class="badge bg-warning"><?= $row['status'] ?></span>
@@ -314,8 +332,8 @@ session_start();
                                   <ul class='list-unstyled'>
                                     <li><strong>Audit ID:</strong> <?= $row['id'] ?></li>
                                     <li><strong>Date:</strong> <?= $row['audit_date'] ?></li>
-                                    <li><strong>Department:</strong> <?= htmlspecialchars($row['department_code']) ?></li>
-                                    <li><strong>Custodian:</strong> <?= htmlspecialchars($row['custodian']) ?></li>
+                                    <li><strong>Department:</strong> <?= htmlspecialchars($row['dept_name']) ?></li>
+                                    <li><strong>Custodian:</strong> <?= htmlspecialchars($row['custodian_name']) ?></li>
                                   </ul>
                                 `,
                                 btnText: 'Yes, Start Audit',
