@@ -386,12 +386,21 @@ $currentDeptId = intval($_SESSION['current_department'] ?? 0);
 if ($currentDeptId > 0) {
     // Prepare statement for specific department
     $stmt = $conn->prepare("
-        SELECT i.id, i.reference_no, i.asset_id, i.consumable_id, i.item_name, i.quantity, d.dept_name
+        SELECT 
+            i.id, 
+            i.reference_no, 
+            i.asset_id, 
+            i.consumable_id, 
+            it.item_name, 
+            i.quantity, 
+            d.dept_name
         FROM bcp_sms4_issuance i
         LEFT JOIN bcp_sms4_departments d ON i.department_id = d.id
+        LEFT JOIN bcp_sms4_items it ON i.item_id = it.item_id
         WHERE i.department_id = ?
         ORDER BY i.id ASC
     ");
+
 
     if ($stmt) {
         $stmt->bind_param("i", $currentDeptId);
@@ -404,11 +413,13 @@ if ($currentDeptId > 0) {
 } else {
     // Fetch all departments if no specific department selected
     $result = $conn->query("
-        SELECT i.id, i.reference_no, i.asset_id, i.consumable_id, i.item_name, i.quantity, d.dept_name
+        SELECT i.id, i.reference_no, i.asset_id, i.consumable_id, it.item_name, i.quantity, d.dept_name
         FROM bcp_sms4_issuance i
         LEFT JOIN bcp_sms4_departments d ON i.department_id = d.id
+        LEFT JOIN bcp_sms4_items it ON i.item_id = it.item_id
         ORDER BY i.id ASC
     ");
+
 }
 
 if ($result && $result->num_rows > 0):

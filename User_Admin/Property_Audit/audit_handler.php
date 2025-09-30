@@ -61,19 +61,23 @@ if (isset($_POST['start_audit_id'])) {
         $_SESSION['current_department'] = $audit['department_id'];
         $_SESSION['current_custodian'] = $audit['custodian_id'];
 
-        echo "<script>
-            window.addEventListener('load', function() {
-                showToast('Audit #{$audit_id} started!', 'info');
-            });
-        </script>";
+        // ✅ Store toast in session instead of echoing inline
+        $_SESSION['toast_message'] = [
+            'message' => "Audit #{$audit_id} started!",
+            'type' => 'info'
+        ];
     } else {
-        echo "<script>
-            window.addEventListener('load', function() {
-                showToast('Audit not found!', 'danger');
-            });
-        </script>";
+        $_SESSION['toast_message'] = [
+            'message' => "Audit not found!",
+            'type' => 'danger'
+        ];
     }
+    error_log("Start audit triggered for ID {$audit_id}");
+    // ✅ Redirect to reload page cleanly
+    header("Location: " . $_SERVER['PHP_SELF']);
+    exit;
 }
+
 
 
 // End audit
@@ -96,7 +100,7 @@ if (isset($_POST['end_audit'])) {
                                      (audit_id, department_id, started_date, completed_date, status, remarks) 
                                      VALUES (?, ?, ?, NOW(), 'Completed', ?)");
             $remarks = "Audit completed by {$auditorName} for department {$audit['department_id']}";
-            $stmt2->bind_param("iis", $audit_id, $audit['department_id'], $remarks);
+            $stmt2->bind_param("iiss", $audit_id, $audit['department_id'], $started_date, $remarks);
             $stmt2->execute();
             $history_id = $stmt2->insert_id;
             $stmt2->close();
