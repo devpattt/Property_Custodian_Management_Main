@@ -111,6 +111,42 @@ include '../../components/nav-bar.php';
 </div>
 </section>
 
+    <!-- Toast Container -->
+        <div class="position-fixed end-0 p-3" style="z-index: 1100; top: 53px;">
+            <div id="toastMessage" class="toast align-items-center border-0" role="alert">
+                <div class="d-flex">
+                    <div class="toast-body fw-bold"></div>
+                    <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast"></button>
+                </div>
+            </div>
+        </div>
+
+        <?php if (isset($_SESSION['toast_success']) || isset($_SESSION['toast_error'])): ?>
+        <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            var toastEl = document.getElementById("toastMessage");
+            var toastBody = toastEl.querySelector(".toast-body");
+
+            <?php if (isset($_SESSION['toast_success'])): ?>
+                toastBody.innerHTML = "<i class='bi bi-check-circle me-2'></i><?= $_SESSION['toast_success']; ?>";
+                toastEl.classList.add("text-bg-success");
+            <?php elseif (isset($_SESSION['toast_error'])): ?>
+                toastBody.innerHTML = "<i class='bi bi-x-circle me-2'></i><?= $_SESSION['toast_error']; ?>";
+                toastEl.classList.add("text-bg-danger");
+            <?php endif; ?>
+
+            var toast = new bootstrap.Toast(toastEl, { delay: 2000 }); // 2 seconds
+            toast.show();
+        });
+        </script>
+        <?php 
+        unset($_SESSION['toast_success'], $_SESSION['toast_error']); 
+        endif; 
+        ?>
+
+
+
+
 <script>
 document.addEventListener("DOMContentLoaded", function () {
     document.querySelectorAll(".view-btn").forEach(button => {
