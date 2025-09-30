@@ -299,15 +299,15 @@ session_start();
             ];
         }
 
-        $sql2 = "SELECT id, audit_date, department_code, custodian, status 
+        $sql2 = "SELECT id, audit_date, department_id, custodian_id, status 
                 FROM bcp_sms4_audit";
         $result2 = $conn->query($sql2);
 
         while ($row = $result2->fetch_assoc()) {
             $events[] = [
                 "date" => $row['audit_date'],
-                "title" => "Audit - {$row['department_code']}",
-                "details" => "Department: {$row['department_code']}<br>Custodian: {$row['custodian']}<br>Status: <b>{$row['status']}</b>",
+                "title" => "Audit - {$row['department_id']}",
+                "details" => "Department: {$row['department_id']}<br>Custodian: {$row['custodian_id']}<br>Status: <b>{$row['status']}</b>",
                 "category" => "audit"
             ];
         }
