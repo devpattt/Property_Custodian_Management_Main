@@ -666,13 +666,19 @@ if ($result && $result->num_rows > 0):
                   </thead>
                   <tbody>
                     <?php
-                    $history = $conn->query("SELECT * FROM bcp_sms4_audit_history ORDER BY completed_date DESC");
+                    $history = $conn->query("
+                        SELECT ah.audit_id, ah.started_date, ah.completed_date, ah.status, 
+                              d.dept_name 
+                        FROM bcp_sms4_audit_history ah
+                        LEFT JOIN bcp_sms4_departments d ON ah.department_id = d.id
+                        ORDER BY ah.completed_date DESC
+                    ");
                     if ($history && $history->num_rows > 0):
                       while ($row = $history->fetch_assoc()):
                     ?>
                     <tr>
                       <td><?= htmlspecialchars($row['audit_id']) ?></td>
-                      <td><?= htmlspecialchars($row['department_code']) ?></td>
+                      <td><?= htmlspecialchars($row['dept_name']) ?></td>
                       <td><?= date('M d, Y H:i', strtotime($row['started_date'])) ?></td>
                       <td><?= date('M d, Y H:i', strtotime($row['completed_date'])) ?></td>
                       <td>
@@ -682,7 +688,7 @@ if ($result && $result->num_rows > 0):
                         <button class="btn btn-primary btn-sm"
                           onclick="generateAuditReport(
                             '<?= htmlspecialchars($row['audit_id']) ?>',
-                            '<?= htmlspecialchars($row['department_code']) ?>',
+                            '<?= htmlspecialchars($row['dept_name']) ?>',
                             '<?= date('M d, Y H:i', strtotime($row['started_date'])) ?>',
                             '<?= date('M d, Y H:i', strtotime($row['completed_date'])) ?>',
                             '<?= htmlspecialchars($row['status']) ?>'
