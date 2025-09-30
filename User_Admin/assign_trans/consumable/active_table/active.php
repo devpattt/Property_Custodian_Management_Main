@@ -6,22 +6,34 @@ include "../../../../connection.php";
 // include "edit_modal.php";   
 
 $query = "
-    SELECT 
-        i.id,
-        i.reference_no,
-        i.item_name,
-        i.category,
-        i.quantity,
-        i.assigned_date,
-        i.end_date,
-        i.remarks,
-        t.fullname AS teacher_name,
-        a.fullname AS admin_name
-    FROM bcp_sms4_issuance i
-    JOIN bcp_sms4_admins t ON i.teacher_id = t.id
-    JOIN bcp_sms4_admins a ON i.issued_by = a.id
-    ORDER BY i.assigned_date DESC
+SELECT 
+    i.id,
+    i.reference_no,
+    it.item_name,
+    CASE 
+        WHEN i.asset_id IS NOT NULL THEN 'Asset'
+        WHEN i.consumable_id IS NOT NULL THEN 'Consumable'
+        ELSE it.category
+    END AS category,
+    i.quantity,
+    i.assigned_date,
+    i.end_date,
+    i.remarks,
+    t.fullname AS teacher_name,
+    d.dept_name AS department,   -- ✅ correct department name
+    a.fullname AS admin_name,
+    ass.property_tag AS asset_tag
+FROM bcp_sms4_issuance i
+JOIN bcp_sms4_items it ON i.item_id = it.item_id
+JOIN bcp_sms4_admins t ON i.teacher_id = t.id
+JOIN bcp_sms4_departments d ON i.department_id = d.id   -- ✅ FIXED join
+JOIN bcp_sms4_admins a ON i.issued_by = a.id
+LEFT JOIN bcp_sms4_asset ass ON i.asset_id = ass.asset_id
+ORDER BY i.assigned_date DESC;
+
 ";
+
+
 $result = $conn->query($query);
 ?>
 
@@ -95,8 +107,10 @@ $result = $conn->query($query);
                       <th>Reference No</th>
                       <th>Item</th>
                       <th>Category</th>
+                      <th>Asset Tag</th>
                       <th>Quantity</th>
                       <th>Teacher</th>
+                      <th>Department</th>
                       <th>Issued By</th>
                       <th data-type="date" data-format="YYYY/MM/DD">Issued Date</th>
                       <th data-type="date" data-format="YYYY/MM/DD">Return Date</th>
@@ -116,8 +130,16 @@ $result = $conn->query($query);
                             <span class="badge bg-info text-dark">Consumable</span>
                           <?php endif; ?>
                         </td>
+                        <td>
+                          <?php if ($row['category'] === 'Asset'): ?>
+                            <?= htmlspecialchars($row['asset_tag'] ?? '-') ?>
+                          <?php else: ?>
+                            <span class="text-muted">—</span>
+                          <?php endif; ?>
+                        </td>
                         <td><?= htmlspecialchars($row['quantity']) ?></td>
                         <td><?= htmlspecialchars($row['teacher_name']) ?></td>
+                        <td><?= htmlspecialchars($row['department']) ?></td>
                         <td><?= htmlspecialchars($row['admin_name']) ?></td>
                         <td><?= date('Y/m/d', strtotime($row['assigned_date'])) ?></td>
                         <td>

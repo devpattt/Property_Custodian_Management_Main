@@ -1,5 +1,5 @@
 <?php
-require_once "../../connection.php";
+include"../../connection.php";
 
 if (!isset($_GET['type'])) {
     http_response_code(400); 

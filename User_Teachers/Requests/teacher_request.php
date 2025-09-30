@@ -17,6 +17,8 @@ $consumables = $conn->query("
     JOIN bcp_sms4_items i ON c.item_id = i.item_id
     WHERE c.quantity > 0
 ");
+
+$departments = $conn->query("SELECT id, dept_name FROM bcp_sms4_departments ORDER BY dept_name");
 ?>
 
 <!DOCTYPE html>
@@ -96,6 +98,15 @@ $consumables = $conn->query("
         <label class="form-label mt-2">Quantity</label>
         <input type="number" name="quantity" class="form-control" min="1" value="1">
       </div>
+      <div class="mb-3">
+      <label class="form-label">Select Department</label>
+      <select name="department_id" class="form-select" required>
+        <option value="">-- Select Department --</option>
+        <?php while($d = $departments->fetch_assoc()): ?>
+          <option value="<?= $d['id'] ?>"><?= $d['dept_name'] ?></option>
+        <?php endwhile; ?>
+      </select>
+    </div>
 
       <div class="mb-3">
         <label class="form-label">Notes / Purpose</label>

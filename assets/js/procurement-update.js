@@ -25,7 +25,7 @@ document.querySelectorAll('form select[name="status"]').forEach(select => {
 // ---------------- Update confirmation modal ----------------
 document.querySelectorAll('.update-btn').forEach(btn => {
   btn.addEventListener("click", function (e) {
-    if (btn.disabled) return; // prevent action if disabled
+    if (btn.disabled) return; 
     e.preventDefault();
     currentForm = this.closest("form");
     updateModal.show();
@@ -73,7 +73,6 @@ document.addEventListener("DOMContentLoaded", () => {
       if (!select) return;
       const dbStatus = select.value;
 
-      // Show all or only rows matching the filter
       row.style.display = (filter === "All" || dbStatus === filter) ? "" : "none";
     });
   });

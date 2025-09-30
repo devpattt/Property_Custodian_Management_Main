@@ -11,18 +11,22 @@ $query = "
       r.date_requested,
       r.notes,
       u.username      AS teacher,
+      d.dept_name     AS department,   -- from departments table
       a.property_tag,
       i1.item_name    AS asset_item,
       c.quantity      AS stock_qty,
       i2.item_name    AS consumable_item
     FROM bcp_sms4_requests r
     JOIN bcp_sms4_admins u ON r.teacher_id = u.id
+    JOIN bcp_sms4_departments d ON r.department_id = d.id 
     LEFT JOIN bcp_sms4_asset a ON r.asset_id = a.asset_id
     LEFT JOIN bcp_sms4_items i1 ON a.item_id = i1.item_id
     LEFT JOIN bcp_sms4_consumable c ON r.consumable_id = c.id
     LEFT JOIN bcp_sms4_items i2 ON c.item_id = i2.item_id
     ORDER BY r.date_requested DESC
 ";
+
+
 $result = $conn->query($query);
 ?>
 ?>
@@ -95,6 +99,7 @@ $result = $conn->query($query);
                   <tr>
                     <th>ID</th>
                     <th>Teacher</th>
+                    <th>Department</th>
                     <th>Item</th>
                     <th>Type</th>
                     <th>Requested Qty</th>
@@ -110,6 +115,7 @@ $result = $conn->query($query);
                   <tr>
                     <td><?= htmlspecialchars($row['request_id']) ?></td>
                     <td><?= htmlspecialchars($row['teacher']) ?></td>
+                    <td><?= htmlspecialchars($row['department']) ?></td>
                     <td>
                       <?php if ($row['request_type'] === 'Asset'): ?>
                         <?= htmlspecialchars($row['property_tag'] ?? 'N/A') ?> — <?= htmlspecialchars($row['asset_item'] ?? 'Unknown') ?>

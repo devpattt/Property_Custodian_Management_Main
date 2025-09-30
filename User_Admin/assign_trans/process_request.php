@@ -17,7 +17,6 @@ if ($request_id <= 0) {
 
 if ($action === 'approve') {
 
-    // Start transaction
     $conn->begin_transaction();
 
     try {
@@ -29,115 +28,100 @@ if ($action === 'approve') {
 
         if (!$req) throw new Exception("Request not found");
 
-        // Generate a unique reference number (guaranteed unique enough for practical use)
         $reference_no = 'ISS-' . date('YmdHis') . '-' . strtoupper(substr(uniqid(), -6));
-
         $request_type  = $req['request_type'];
         $requested_qty = intval($req['quantity']);
-        $teacher_id    = intval($req['teacher_id']); // ensure request has teacher_id
+        $teacher_id    = intval($req['teacher_id']);
 
-        if ($request_type === 'Consumable') {
-            // Lock consumable row and get stock + item_id
-            $consumable_id = intval($req['consumable_id']);
-            $stmtC = $conn->prepare("SELECT id, quantity, item_id FROM bcp_sms4_consumable WHERE id = ? FOR UPDATE");
-            $stmtC->bind_param("i", $consumable_id);
-            $stmtC->execute();
-            $c = $stmtC->get_result()->fetch_assoc();
-            if (!$c) throw new Exception("Consumable record not found");
+        $item_id = null;
 
-            $stock = intval($c['quantity']);
-            if ($stock < $requested_qty) {
-                // Not enough stock: rollback and return message
-                $conn->rollback();
-                header("Location: view_request.php?updated=0&error=insufficient_stock");
-                exit;
-            }
+// ======== HANDLE CONSUMABLE ========
+if ($request_type === 'Consumable') {
+    $consumable_id = intval($req['consumable_id']);
 
-            // Get consumable item_name from items table
-            $stmtItem = $conn->prepare("SELECT item_name FROM bcp_sms4_items WHERE item_id = ?");
-            $stmtItem->bind_param("i", $c['item_id']);
-            $stmtItem->execute();
-            $itemRow = $stmtItem->get_result()->fetch_assoc();
-            $item_name = $itemRow['item_name'] ?? 'Consumable';
+    $stmtC = $conn->prepare("
+        SELECT c.id, c.quantity, i.item_id, i.item_name
+        FROM bcp_sms4_consumable c
+        JOIN bcp_sms4_items i ON c.item_id = i.item_id
+        WHERE c.id = ? FOR UPDATE
+    ");
+    $stmtC->bind_param("i", $consumable_id);
+    $stmtC->execute();
+    $c = $stmtC->get_result()->fetch_assoc();
+    if (!$c) throw new Exception("Consumable record not found");
 
-            // Deduct stock
-            $stmtUpd = $conn->prepare("UPDATE bcp_sms4_consumable SET quantity = quantity - ? WHERE id = ?");
-            $stmtUpd->bind_param("ii", $requested_qty, $consumable_id);
-            $stmtUpd->execute();
-            if ($stmtUpd->affected_rows === 0) throw new Exception("Failed to deduct consumable stock");
+    $stock = intval($c['quantity']);
+    if ($stock < $requested_qty) {
+        $conn->rollback();
+        header("Location: view_request.php?updated=0&error=insufficient_stock");
+        exit;
+    }
 
-            // Insert issuance record
-            $stmtIss = $conn->prepare("
-                INSERT INTO bcp_sms4_issuance
-                  (reference_no, request_id, equipment_id, item_name, category, quantity, teacher_id, issued_by, assigned_date)
-                VALUES (?, ?, ?, ?, 'Consumable', ?, ?, ?, NOW())
-            ");
-            $equipment_id = $consumable_id;
-            $stmtIss->bind_param(
-                "siissii",
-                $reference_no,
-                $request_id,
-                $equipment_id,
-                $item_name,
-                $requested_qty,
-                $teacher_id,
-                $admin_id
-            );
-            $stmtIss->execute();
+    // Deduct stock
+    $stmtUpd = $conn->prepare("UPDATE bcp_sms4_consumable SET quantity = quantity - ? WHERE id = ?");
+    $stmtUpd->bind_param("ii", $requested_qty, $consumable_id);
+    $stmtUpd->execute();
 
-        } elseif ($request_type === 'Asset') {
-            // Lock asset row and check availability
-            $asset_id = intval($req['asset_id']);
-            $stmtA = $conn->prepare("SELECT asset_id, status, item_id, property_tag FROM bcp_sms4_asset WHERE asset_id = ? FOR UPDATE");
-            $stmtA->bind_param("i", $asset_id);
-            $stmtA->execute();
-            $a = $stmtA->get_result()->fetch_assoc();
-            if (!$a) throw new Exception("Asset not found");
+    $item_id       = $c['item_id'];
+    $asset_id      = null;             // no asset here
+    $consumable_id = $c['id'];
+}
 
-            $currentStatus = strtolower($a['status'] ?? '');
-            $availableStatuses = ['in storage','in-storage','available','stored','in_storage'];
+// ======== HANDLE ASSET ========
+elseif ($request_type === 'Asset') {
+    $asset_id = intval($req['asset_id']);
 
-            if (!in_array($currentStatus, $availableStatuses)) {
-                throw new Exception("Asset not available for issuance (status: {$a['status']})");
-            }
+    $stmtA = $conn->prepare("
+        SELECT a.asset_id, a.status, a.property_tag, i.item_id, i.item_name
+        FROM bcp_sms4_asset a
+        JOIN bcp_sms4_items i ON a.item_id = i.item_id
+        WHERE a.asset_id = ? FOR UPDATE
+    ");
+    $stmtA->bind_param("i", $asset_id);
+    $stmtA->execute();
+    $a = $stmtA->get_result()->fetch_assoc();
+    if (!$a) throw new Exception("Asset not found");
 
-            // Get item_name from items master table
-            $stmtItem = $conn->prepare("SELECT item_name FROM bcp_sms4_items WHERE item_id = ?");
-            $stmtItem->bind_param("i", $a['item_id']);
-            $stmtItem->execute();
-            $itemRow = $stmtItem->get_result()->fetch_assoc();
-            $item_name = $itemRow['item_name'] ?? ($a['property_tag'] ?? 'Asset');
+    $currentStatus = strtolower($a['status'] ?? '');
+    $availableStatuses = ['in storage','in-storage','available','stored','in_storage'];
 
-            // Update asset: assign to teacher and change status
-            $stmtUpd = $conn->prepare("UPDATE bcp_sms4_asset SET status = 'In-Use', assigned_to = ? WHERE asset_id = ?");
-            $stmtUpd->bind_param("ii", $teacher_id, $asset_id);
-            $stmtUpd->execute();
-            if ($stmtUpd->affected_rows === 0) throw new Exception("Failed to update asset status/assignment");
+    if (!in_array($currentStatus, $availableStatuses)) {
+        throw new Exception("Asset not available (status: {$a['status']})");
+    }
 
-            // Insert issuance record (quantity = 1 for asset)
-            $quantity = 1;
-            $stmtIss = $conn->prepare("
-                INSERT INTO bcp_sms4_issuance
-                  (reference_no, request_id, equipment_id, item_name, category, quantity, teacher_id, issued_by, assigned_date)
-                VALUES (?, ?, ?, ?, 'Asset', ?, ?, ?, NOW())
-            ");
-            $stmtIss->bind_param(
-                "siissii",
-                $reference_no,
-                $request_id,
-                $asset_id,
-                $item_name,
-                $quantity,
-                $teacher_id,
-                $admin_id
-            );
-            $stmtIss->execute();
+    // Update asset to assigned
+    $stmtUpd = $conn->prepare("UPDATE bcp_sms4_asset SET status = 'In-Use', assigned_to = ? WHERE asset_id = ?");
+    $stmtUpd->bind_param("ii", $teacher_id, $asset_id);
+    $stmtUpd->execute();
 
-        } else {
-            throw new Exception("Unknown request type");
-        }
+    $item_id       = $a['item_id'];
+    $consumable_id = null;             // no consumable here
+}
 
-        // Update request status to Approved
+// ======== INSERT ISSUANCE ========
+$dept_id = intval($req['department_id']);
+
+$stmtIss = $conn->prepare("
+    INSERT INTO bcp_sms4_issuance
+      (reference_no, request_id, item_id, quantity, teacher_id, department_id, issued_by, assigned_date, asset_id, consumable_id)
+    VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), ?, ?)
+");
+$stmtIss->bind_param(
+    "siiiiiiii",
+    $reference_no,
+    $request_id,
+    $item_id,
+    $requested_qty,
+    $teacher_id,
+    $dept_id,
+    $admin_id,
+    $asset_id,
+    $consumable_id
+);
+$stmtIss->execute();
+
+
+        // ======== UPDATE REQUEST ========
         $stmtReqUpd = $conn->prepare("UPDATE bcp_sms4_requests SET status = 'Approved' WHERE request_id = ?");
         $stmtReqUpd->bind_param("i", $request_id);
         $stmtReqUpd->execute();
@@ -153,14 +137,17 @@ if ($action === 'approve') {
         exit;
     }
 
-} elseif ($action === 'reject') {
+}
+// ======== HANDLE REJECT ========
+elseif ($action === 'reject') {
     $stmt = $conn->prepare("UPDATE bcp_sms4_requests SET status = 'Rejected' WHERE request_id = ?");
     $stmt->bind_param("i", $request_id);
     $stmt->execute();
 
     header("Location: view_request.php?updated=1");
     exit;
-} else {
+}
+else {
     header("Location: view_request.php");
     exit;
 }
