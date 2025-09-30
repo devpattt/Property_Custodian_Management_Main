@@ -1,4 +1,4 @@
-   <?php
+<?php
 include '../../connection.php';
 session_start();
 
@@ -10,38 +10,71 @@ if (isset($_POST['schedule_audit'])) {
     $department_id = $_POST['department_id']; 
     $custodian_id = $_POST['custodian_id'];
 
+    // Insert into database
     $stmt = $conn->prepare("INSERT INTO bcp_sms4_audit (audit_date, department_id, custodian_id, status) VALUES (?, ?, ?, 'Scheduled')");
     $stmt->bind_param("sii", $audit_date, $department_id, $custodian_id);
     $stmt->execute();
     $stmt->close();
 
-    echo "<script>
-        window.addEventListener('load', function() {
-            showToast('Audit scheduled successfully!', 'success');
-        });
-    </script>";
+    // Set a session message for the toast
+    $_SESSION['toast_message'] = [
+        'message' => 'Audit scheduled successfully!',
+        'type' => 'success'
+    ];
+
+    // Redirect immediately to avoid resubmission on reload
+    header("Location: " . $_SERVER['PHP_SELF']);
+    exit;
 }
 
-// Start audit
+// Then, in your page, display the toast if session is set
+if (isset($_SESSION['toast_message'])) {
+    $toast = $_SESSION['toast_message'];
+    echo "<script>
+        window.addEventListener('load', function() {
+            showToast('{$toast['message']}', '{$toast['type']}');
+        });
+    </script>";
+    unset($_SESSION['toast_message']);
+}
+
+
 if (isset($_POST['start_audit_id'])) {
-    $aid = intval($_POST['start_audit_id']);
+    $audit_id = intval($_POST['start_audit_id']);
+
+    // 1. Update audit status to Ongoing
     $stmt = $conn->prepare("UPDATE bcp_sms4_audit SET status = 'Ongoing' WHERE id = ?");
-    $stmt->bind_param("i", $aid);
+    $stmt->bind_param("i", $audit_id);
     $stmt->execute();
     $stmt->close();
 
-    $res = $conn->query("SELECT department_id FROM bcp_sms4_audit WHERE id = {$aid} LIMIT 1");
-    $dep_id = $res && $res->num_rows > 0 ? $res->fetch_assoc()['department_id'] : null;
+    // 2. Fetch department_id and custodian_id for this audit
+    $stmt2 = $conn->prepare("SELECT department_id, custodian_id FROM bcp_sms4_audit WHERE id = ? LIMIT 1");
+    $stmt2->bind_param("i", $audit_id);
+    $stmt2->execute();
+    $audit = $stmt2->get_result()->fetch_assoc();
+    $stmt2->close();
 
-    $_SESSION['current_audit'] = $aid;
-    $_SESSION['current_department'] = $dep_id;
+    if ($audit) {
+        // 3. Set session variables
+        $_SESSION['current_audit'] = $audit_id;
+        $_SESSION['current_department'] = $audit['department_id'];
+        $_SESSION['current_custodian'] = $audit['custodian_id'];
 
-    echo "<script>
-        window.addEventListener('load', function() {
-            showToast('Audit #{$aid} started!', 'info');
-        });
-    </script>";
+        echo "<script>
+            window.addEventListener('load', function() {
+                showToast('Audit #{$audit_id} started!', 'info');
+            });
+        </script>";
+    } else {
+        echo "<script>
+            window.addEventListener('load', function() {
+                showToast('Audit not found!', 'danger');
+            });
+        </script>";
+    }
 }
+
 
 // End audit
 if (isset($_POST['end_audit'])) {

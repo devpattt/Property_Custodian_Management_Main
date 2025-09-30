@@ -27,12 +27,11 @@ session_start();
   <link href="../../assets/css/auditmodal.css" rel="stylesheet">
 </head>
 <body>
+  <?php
+  include 'audit_handler.php';
+  include '../../components/nav-bar.php';
+  ?>
     <div class="toast-container" id="toastContainer"></div>
-
-    <?php
-     include '../../components/nav-bar.php';
-     include 'audit_handler.php'
-     ?>
     <main id="main" class="main">
 
       <div class="pagetitle">
@@ -355,132 +354,132 @@ session_start();
 
            <!-- Audit Session -->
             <div class="tab-pane fade" id="session" role="tabpanel">
-            <h5 class="card-title">Audit Session</h5>
+    <h5 class="card-title">Audit Session</h5>
 
-            <?php if (isset($_SESSION['current_audit'])): ?>
-                <div class="alert alert-info">
-                    <strong>Current Audit:</strong> <?php echo htmlspecialchars($current_audit_label); ?>
-                </div>
+    <?php if (isset($_SESSION['current_audit'])): ?>
+        <div class="alert alert-info">
+            <strong>Current Audit:</strong> <?php echo htmlspecialchars($current_audit_label); ?>
+        </div>
 
-                <form method="POST" action="" id="endAuditForm">
-                    <input type="hidden" name="audit_id" value="<?php echo intval($_SESSION['current_audit']); ?>">
-                    <input type="hidden" name="end_audit" value="1">
+        <form method="POST" action="" id="endAuditForm">
+            <input type="hidden" name="audit_id" value="<?php echo intval($_SESSION['current_audit']); ?>">
+            <input type="hidden" name="end_audit" value="1">
 
-                    <table class="table datatable">
-                    <thead>
-                        <tr>
+            <table class="table datatable">
+                <thead>
+                    <tr>
                         <th>Reference No</th>
-                        <th>Asset Tag</th>
+                        <th>Asset/Consumable ID</th>
                         <th>Description</th>
                         <th>Department</th>
                         <th>Quantity</th>
                         <th>Status</th>
                         <th>Condition</th>
                         <th>Remarks</th>
-                        </tr>
-                    </thead>
-                     <tbody>
-                       <?php
-                       $auditId = intval($_SESSION['current_audit']);
-                        $currentDept = $_SESSION['current_department'] ?? '';
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php
+$auditId = intval($_SESSION['current_audit'] ?? 0);
+$currentDeptId = intval($_SESSION['current_department'] ?? 0);
 
-                        if ($currentDept) {
-                            $assets = $conn->prepare("SELECT id, reference_no, equipment_id, item_name, quantity, department_code FROM bcp_sms4_issuance WHERE department_code = ? ORDER BY id ASC");
-                            if ($assets) {
-                                $assets->bind_param("s", $currentDept);
-                                $assets->execute();
-                                $result = $assets->get_result();
-                                $assets->close();
-                            } else {
-                                echo "<script>
-                                    window.addEventListener('load', function() {
-                                        showToast('Error preparing query: " . addslashes($conn->error) . "', 'danger');
-                                    });
-                                </script>";
-                                $result = false;
-                            }
-                        } else {
-                            $result = $conn->query("SELECT id, reference_no, equipment_id, item_name, quantity, department_code FROM bcp_sms4_issuance ORDER BY id ASC");
-                            if (!$result) {
-                                echo "<script>
-                                    window.addEventListener('load', function() {
-                                        showToast('Error executing query: " . addslashes($conn->error) . "', 'danger');
-                                    });
-                                </script>";
-                            }
-                        }
+if ($currentDeptId > 0) {
+    // Prepare statement for specific department
+    $stmt = $conn->prepare("
+        SELECT i.id, i.reference_no, i.asset_id, i.consumable_id, i.item_name, i.quantity, d.dept_name
+        FROM bcp_sms4_issuance i
+        LEFT JOIN bcp_sms4_departments d ON i.department_id = d.id
+        WHERE i.department_id = ?
+        ORDER BY i.id ASC
+    ");
 
-                        if ($result && $result->num_rows > 0):
-                            while ($row = $result->fetch_assoc()):
-                        ?>
-                        <tr>
-                            <td><?php echo htmlspecialchars($row['reference_no']); ?></td>
-                            <td><?php echo htmlspecialchars($row['equipment_id']); ?></td>
-                            <td><?php echo htmlspecialchars($row['item_name']); ?></td>
-                            <td><?php echo htmlspecialchars($row['department_code']); ?></td>
-                            <td><?php echo htmlspecialchars($row['quantity']); ?></td>
-                            <td>
-                                <select name="status[<?php echo $row['id']; ?>]" class="form-select form-select-sm">
-                                    <option value="Valid">Valid</option>
-                                    <option value="Disposed">Disposed</option>
-                                    <option value="Mismatch">Mismatch</option>
-                                    <option value="Missing">Missing</option>
-                                </select>
-                            </td>
-                            <td>
-                                <select name="asset_condition[<?php echo $row['id']; ?>]" class="form-select form-select-sm">
-                                    <option value="Good">Good</option>
-                                    <option value="Fair">Fair</option>
-                                    <option value="Damaged">Damaged</option>
-                                    <option value="Lost">Lost</option>
-                                </select>
-                            </td>
-                            <td>
-                                <input type="text" name="remarks[<?php echo $row['id']; ?>]" class="form-control form-control-sm" placeholder="Enter remarks">
-                            </td>
-                        </tr>
-                        <?php 
-                            endwhile; 
-                        else: 
-                        ?>
-                            <tr>
-                                <td colspan="8" class="text-center">No assets found for this department</td>
-                            </tr>
-                        <?php endif; ?>
-                      </tbody>
-                    </table>
-                    <div class="d-flex gap-2">
-                        <button type="button" class="btn btn-danger mt-2" onclick="showConfirmModal({
-                          type: 'danger',
-                          title: 'Confirm End Audit',
-                          message: `
-                            <div class='alert alert-warning'>
-                              <i class='bi bi-exclamation-triangle-fill'></i> 
-                              <strong>Warning:</strong> This action cannot be undone!
-                            </div>
-                            <p>Are you sure you want to end this audit session?</p>
-                            <p class='mb-0'><strong>Current Audit:</strong> <?php echo htmlspecialchars($current_audit_label); ?></p>
-                          `,
-                          btnText: 'Yes, End Audit',
-                          onConfirm: function() {
-                            document.getElementById('endAuditForm').submit();
-                          }
-                        })">
-                            <i class="bi bi-stop-circle"></i> End Audit & Save to History
-                        </button>
-                        <a href="#" class="btn btn-secondary mt-2" onclick="window.location.reload()">
-                            <i class="bi bi-arrow-clockwise"></i> Refresh
-                        </a>
+    if ($stmt) {
+        $stmt->bind_param("i", $currentDeptId);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $stmt->close();
+    } else {
+        die("SQL Error: " . $conn->error);
+    }
+} else {
+    // Fetch all departments if no specific department selected
+    $result = $conn->query("
+        SELECT i.id, i.reference_no, i.asset_id, i.consumable_id, i.item_name, i.quantity, d.dept_name
+        FROM bcp_sms4_issuance i
+        LEFT JOIN bcp_sms4_departments d ON i.department_id = d.id
+        ORDER BY i.id ASC
+    ");
+}
+
+if ($result && $result->num_rows > 0):
+    while ($row = $result->fetch_assoc()):
+        $tag = $row['asset_id'] ?: $row['consumable_id'] ?: 'N/A';
+?>
+<tr>
+    <td><?= htmlspecialchars($row['reference_no']); ?></td>
+    <td><?= htmlspecialchars($tag); ?></td>
+    <td><?= htmlspecialchars($row['item_name']); ?></td>
+    <td><?= htmlspecialchars($row['dept_name'] ?: 'N/A'); ?></td>
+    <td><?= htmlspecialchars($row['quantity']); ?></td>
+    <td>
+        <select name="status[<?= $row['id']; ?>]" class="form-select form-select-sm">
+            <option value="Valid">Valid</option>
+            <option value="Disposed">Disposed</option>
+            <option value="Mismatch">Mismatch</option>
+            <option value="Missing">Missing</option>
+        </select>
+    </td>
+    <td>
+        <select name="asset_condition[<?= $row['id']; ?>]" class="form-select form-select-sm">
+            <option value="Good">Good</option>
+            <option value="Fair">Fair</option>
+            <option value="Damaged">Damaged</option>
+            <option value="Lost">Lost</option>
+        </select>
+    </td>
+    <td>
+        <input type="text" name="remarks[<?= $row['id']; ?>]" class="form-control form-control-sm" placeholder="Enter remarks">
+    </td>
+</tr>
+<?php endwhile; else: ?>
+<tr>
+    <td colspan="8" class="text-center">No assets found for this department</td>
+</tr>
+<?php endif; ?>
+
+
+            <div class="d-flex gap-2">
+                <button type="button" class="btn btn-danger mt-2" onclick="showConfirmModal({
+                  type: 'danger',
+                  title: 'Confirm End Audit',
+                  message: `
+                    <div class='alert alert-warning'>
+                      <i class='bi bi-exclamation-triangle-fill'></i> 
+                      <strong>Warning:</strong> This action cannot be undone!
                     </div>
-                </form>
-
-                <?php else: ?>
-                    <div class="alert alert-warning">
-                        <strong>No Active Audit Session</strong><br>
-                        Please start an audit from the "Upcoming Audits" tab to begin an audit session.
-                    </div>
-                <?php endif; ?>
+                    <p>Are you sure you want to end this audit session?</p>
+                    <p class='mb-0'><strong>Current Audit:</strong> <?php echo htmlspecialchars($current_audit_label); ?></p>
+                  `,
+                  btnText: 'Yes, End Audit',
+                  onConfirm: function() {
+                    document.getElementById('endAuditForm').submit();
+                  }
+                })">
+                    <i class="bi bi-stop-circle"></i> End Audit & Save to History
+                </button>
+                <a href="#" class="btn btn-secondary mt-2" onclick="window.location.reload()">
+                    <i class="bi bi-arrow-clockwise"></i> Refresh
+                </a>
             </div>
+        </form>
+
+    <?php else: ?>
+        <div class="alert alert-warning">
+            <strong>No Active Audit Session</strong><br>
+            Please start an audit from the "Upcoming Audits" tab to begin an audit session.
+        </div>
+    <?php endif; ?>
+</div>
 
             <!-- Discrepancies -->
               <div class="tab-pane fade" id="discrepancies" role="tabpanel">
