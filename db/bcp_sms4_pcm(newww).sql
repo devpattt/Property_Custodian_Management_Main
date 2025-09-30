@@ -26,7 +26,7 @@ CREATE TABLE `bcp_sms4_admins` (
   `password` varchar(255) NOT NULL,
   `email` varchar(255) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=15 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 DROP TABLE IF EXISTS `bcp_sms4_adminsss`;
 CREATE TABLE `bcp_sms4_adminsss` (
@@ -90,11 +90,15 @@ DROP TABLE IF EXISTS `bcp_sms4_audit`;
 CREATE TABLE `bcp_sms4_audit` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `audit_date` date NOT NULL,
-  `department_code` enum('BSIT','CRIM','BADTRIP','BS PHCYHOLOGY') DEFAULT NULL,
-  `custodian` varchar(100) NOT NULL,
+  `department_id` int(11) NOT NULL,
+  `custodian_id` int(11) NOT NULL,
   `status` enum('Scheduled','Ongoing','Completed') DEFAULT 'Scheduled',
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+  PRIMARY KEY (`id`),
+  KEY `department_id` (`department_id`),
+  KEY `custodian_id` (`custodian_id`),
+  CONSTRAINT `bcp_sms4_audit_ibfk_1` FOREIGN KEY (`department_id`) REFERENCES `bcp_sms4_departments` (`id`),
+  CONSTRAINT `bcp_sms4_audit_ibfk_2` FOREIGN KEY (`custodian_id`) REFERENCES `bcp_sms4_admins` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=17 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 DROP TABLE IF EXISTS `bcp_sms4_audit_discrepancies`;
 CREATE TABLE `bcp_sms4_audit_discrepancies` (
@@ -127,7 +131,7 @@ DROP TABLE IF EXISTS `bcp_sms4_audit_history`;
 CREATE TABLE `bcp_sms4_audit_history` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `audit_id` int(11) NOT NULL,
-  `department_code` varchar(50) NOT NULL,
+  `department_id` int(11) NOT NULL,
   `started_date` datetime DEFAULT NULL,
   `completed_date` datetime DEFAULT NULL,
   `status` enum('Completed','Cancelled') DEFAULT 'Completed',
@@ -313,7 +317,17 @@ CREATE TABLE `bcp_sms4_scheduling` (
 INSERT INTO `bcp_sms4_admins` (`id`, `user_type`, `username`, `fullname`, `password`, `email`) VALUES
 (2, 'teacher', 'Teacher', 'Teacher', '$2y$10$WHJtGH2A7l3ZEKron3u.WOT6zUR6bGHGhssU0vIWqeo/pm7yUTxma', 'aceplayer81218@gmail.com'),
 (3, 'admin', 'Admin', 'Administrator', '$2y$10$nP8qd/wMRvtqHtc.ukF5d.zkDOQK9DJKLo.p4RaP3EgAMezJkwewS', 'notyujisandesu2@gmail.com'),
-(4, 'teacher', 'Custodian', 'Custodian', '$2y$10$a4y/te38BWq/VZ/hBWsBx.XFaSsuLKZjVnWb9beJcq6nR6CDIkIlO', 'notyujiiiii@gmail.com');
+(4, 'teacher', 'Custodian', 'Custodian', '$2y$10$a4y/te38BWq/VZ/hBWsBx.XFaSsuLKZjVnWb9beJcq6nR6CDIkIlO', 'notyujiiiii@gmail.com'),
+(5, 'teacher', 'Sherwin', 'Sherwin Juana', '$2y$10$Cwfsq0lljw6hifOemKfZJ.6.UyuPZEzRQ0pME.R8mZ7UDOGxUKr7C', 'kantotkalikot@gmail.com'),
+(6, 'teacher', 'Alex', 'Alexis Sofio Aco', '$2y$10$SPsunt0tpmBCi4bCrxnHPeyArCazZHZUbs0hiTPrckPVaS.HFgPcm', 'subotite@gmail.com'),
+(7, 'teacher', 'Emm', 'Emm Bruce Junio', '$2y$10$7b.NVzAjeQ9AkKTG6J1AIO2GtC1qUNkyAs/.rxgI7EybPG/iJD0v.', 'bangbros@gmail.com'),
+(8, 'teacher', 'robert', 'Robert Ken Bordamonte', '$2y$10$xM.qkheiw8RsK3spETDfIOXF8Wqe74f4c5KxkBi4ouLk.2zepEema', 'kantutanNA!@gmail.com'),
+(9, 'teacher', 'Cedric', 'John Cedric Magsadia', '$2y$10$YdM8QVAD3SAH2NAdhJJse.4WQbWfr16Mp9btwmFiWpZyI/y.yEWOm', 'boylabo@gmail.com'),
+(10, 'custodian', 'Christian', 'John Christian Vega', '$2y$10$TULFDHYxaHIUrDpTGXLM3OUjO3OF34bGnZ3ioofAOmIe1A4dN0kCS', 'kumakantotNGlola@gmail.com'),
+(11, 'custodian', 'Paulo', 'John Paulo Arrieta', '$2y$10$PnlcUjJi7LGe/vnti1o48eMIKrLPBbiDeFhJy1ebmc34YZVSRiLYS', 'tagahalo@gmail.com'),
+(12, 'custodian', 'rheyvin', 'Rheyvin Galang', '$2y$10$rNStkKVQebhL76fOn2cQCO.W.CYYzvq9hFBk1qyL/awldH1mh2MiS', 'PWDboy@gmail.com'),
+(13, 'custodian', 'Vermelle', 'Vermelle James Mendiola', '$2y$10$vkOzMRPZsbJYNS3D4jl3mOFhhXKz5IRhV7yA/Iimn94ObeLXQt3ZW', 'niggaman@gmail.com'),
+(14, 'custodian', 'Aaron', 'Aaron Cristobal', '$2y$10$JC8NCgXG4L8M.z7QS8/ikut2uXT8GNMnKLdIvZuXF3Tk9eIhmWg.e', 'nananapakNgPWD@gmail.com');
 INSERT INTO `bcp_sms4_adminsss` (`id`, `user_type`, `username`, `fullname`, `password`, `email`) VALUES
 (2, 'teacher', 'Senka', 'Senka', '$2y$10$WHJtGH2A7l3ZEKron3u.WOT6zUR6bGHGhssU0vIWqeo/pm7yUTxma', 'aceplayer81218@gmail.com'),
 (3, 'admin', 'Admin', 'Administrator', '$2y$10$nP8qd/wMRvtqHtc.ukF5d.zkDOQK9DJKLo.p4RaP3EgAMezJkwewS', 'notyujisandesu2@gmail.com');
@@ -577,34 +591,15 @@ INSERT INTO `bcp_sms4_asset` (`asset_id`, `item_id`, `property_tag`, `status`, `
 (261, 1, 'ASSET-2025-0257', 'In-Use', NULL, NULL, '2025-09-29');
 
 
-INSERT INTO `bcp_sms4_audit` (`id`, `audit_date`, `department_code`, `custodian`, `status`) VALUES
-(5, '2025-09-30', 'BSIT', 'Custodian 1', 'Completed'),
-(6, '2025-10-01', 'BS PHCYHOLOGY', 'Custodian 3', 'Completed'),
-(7, '2025-10-15', 'BADTRIP', 'Custodian 6', 'Completed'),
-(8, '2025-10-17', 'BS PHCYHOLOGY', 'Custodian 6', 'Completed'),
-(9, '2025-10-30', 'BSIT', 'Custodian 6', 'Completed'),
-(10, '2025-10-24', 'CRIM', 'Custodian 6', 'Ongoing');
+INSERT INTO `bcp_sms4_audit` (`id`, `audit_date`, `department_id`, `custodian_id`, `status`) VALUES
+(16, '1222-02-12', 3, 14, 'Scheduled');
 INSERT INTO `bcp_sms4_audit_discrepancies` (`discrepancy_id`, `audit_type`, `audit_id`, `description`, `resolved`, `created_at`) VALUES
-(1, 'Asset', 1, 'Status: Missing, Condition: Good - Monitor is missing from IT Lab', 0, '2025-09-29 05:05:33'),
-(2, 'Asset', 1, 'Status: Broken, Condition: Damaged - Projector lens cracked', 1, '2025-09-29 05:05:33'),
-(3, 'Asset', 2, 'Status: Repair Needed, Condition: Fair - Aircon unit not cooling properly', 1, '2025-09-29 05:05:33'),
-(4, 'Consumable', 3, 'Status: Mismatch - Inventory shows 50 alcohol bottles but only 45 found', 1, '2025-09-29 05:05:33');
-INSERT INTO `bcp_sms4_audit_findings` (`id`, `history_id`, `asset_id`, `asset_name`, `quantity`, `finding_status`, `asset_condition`, `remarks`, `recorded_on`) VALUES
-(1, 11, 1, 'Student Armchair', 1, '', 'Good', '', '2025-09-29 04:46:33'),
-(2, 11, 2, 'Student Armchair', 1, '', 'Good', '', '2025-09-29 04:46:33'),
-(3, 12, 4, 'Student Armchair', 1, '', 'Good', 'good', '2025-09-29 06:09:45'),
-(4, 13, 3, 'Whiteboard Marker (Black)', 19, '', 'Good', '', '2025-09-29 06:13:29'),
-(5, 14, 4, 'Student Armchair', 1, '', 'Good', 'not good', '2025-09-29 06:17:13'),
-(6, 15, 1, 'Student Armchair', 1, '', 'Good', 'not good', '2025-09-29 06:30:49'),
-(7, 15, 2, 'Student Armchair', 1, '', 'Good', 'good', '2025-09-29 06:30:49');
-INSERT INTO `bcp_sms4_audit_history` (`id`, `audit_id`, `department_code`, `started_date`, `completed_date`, `status`, `remarks`, `archived_on`) VALUES
-(7, 1, 'BSIT', '2024-01-15 08:00:00', '2025-09-29 04:38:42', 'Completed', NULL, '2025-09-29 04:38:42'),
-(8, 999, 'TEST_DEPT', '2024-01-15 08:00:00', '2025-09-29 04:39:05', 'Completed', 'Test audit entry', '2025-09-29 04:39:05'),
-(11, 5, 'BSIT', '2025-09-30 00:00:00', '2025-09-29 04:46:33', 'Completed', 'Audit completed by Admin for department BSIT', '2025-09-29 04:46:33'),
-(12, 6, 'BS PHCYHOLOGY', '2025-10-01 00:00:00', '2025-09-29 06:09:45', 'Completed', 'Audit completed by Admin for department BS PHCYHOLOGY', '2025-09-29 06:09:45'),
-(13, 7, 'BADTRIP', '2025-10-15 00:00:00', '2025-09-29 06:13:29', 'Completed', 'Audit completed by Admin for department BADTRIP', '2025-09-29 06:13:29'),
-(14, 8, 'BS PHCYHOLOGY', '2025-10-17 00:00:00', '2025-09-29 06:17:13', 'Completed', 'Audit completed by Admin for department BS PHCYHOLOGY', '2025-09-29 06:17:13'),
-(15, 9, 'BSIT', '2025-10-30 00:00:00', '2025-09-29 06:30:49', 'Completed', 'Audit completed by Admin for department BSIT', '2025-09-29 06:30:49');
+(1, 'Asset', 1, 'Status: Missing, Condition: Good - Monitor is missing from IT Lab', 0, '2025-09-28 21:05:33'),
+(2, 'Asset', 1, 'Status: Broken, Condition: Damaged - Projector lens cracked', 1, '2025-09-28 21:05:33'),
+(3, 'Asset', 2, 'Status: Repair Needed, Condition: Fair - Aircon unit not cooling properly', 1, '2025-09-28 21:05:33'),
+(4, 'Consumable', 3, 'Status: Mismatch - Inventory shows 50 alcohol bottles but only 45 found', 1, '2025-09-28 21:05:33');
+
+
 INSERT INTO `bcp_sms4_consumable` (`id`, `item_id`, `unit`, `quantity`, `status`, `expiration`, `date_received`) VALUES
 (10, 11, 'pcs', 56, 'Available', '2026-09-20', '2025-09-20 14:41:46'),
 (16, 9, 'ream', 3, 'Available', '2026-09-22', '2025-09-22 20:56:43'),
@@ -644,48 +639,48 @@ INSERT INTO `bcp_sms4_items` (`item_id`, `item_name`, `category`, `item_type`, `
 (16, 'First Aid Kit', 'Medical Supply', 'Consumable', 'set'),
 (17, 'Bond Paper A4', 'Consumable', 'Consumable', '');
 INSERT INTO `bcp_sms4_procurement` (`procurement_id`, `item_id`, `quantity`, `request_date`, `requested_by`, `approved_by`, `expected_date`, `reason`, `status`, `created_at`) VALUES
-(1, 1, 5, '2025-09-01', 'Faculty Office', NULL, NULL, 'For new faculty computers', 'Completed', '2025-09-20 13:39:38'),
-(2, 2, 20, '2025-09-02', 'Registrar', NULL, NULL, 'Replacement of broken chairs', 'Pending', '2025-09-20 13:39:38'),
-(3, 3, 10, '2025-09-03', 'Library', NULL, NULL, 'Additional tables for study area', 'Pending', '2025-09-20 13:39:38'),
-(4, 4, 2, '2025-09-05', 'IT Department', NULL, NULL, 'Backup projector units', 'Rejected', '2025-09-20 13:39:38'),
-(5, 5, 50, '2025-09-06', 'Accounting', NULL, NULL, 'Monthly supply of bond paper', 'Rejected', '2025-09-20 13:39:38'),
-(6, 6, 100, '2025-09-07', 'Faculty Office', NULL, NULL, 'Whiteboard markers for classrooms', 'Completed', '2025-09-20 13:39:38'),
-(7, 7, 30, '2025-09-08', 'Clinic', NULL, NULL, 'Alcohol bottles for disinfection', 'Completed', '2025-09-20 13:39:38'),
-(8, 8, 10, '2025-09-09', 'Admin Office', NULL, NULL, 'Printer ink cartridges', 'Completed', '2025-09-20 13:39:38'),
-(9, 9, 50, '2025-09-10', 'Registrar', NULL, NULL, 'Printing of student forms', 'Completed', '2025-09-20 16:00:00'),
-(10, 10, 200, '2025-09-11', 'Faculty Office', NULL, NULL, 'For classroom use', 'Completed', '2025-09-20 16:10:00'),
-(11, 11, 100, '2025-09-12', 'Faculty Office', NULL, NULL, 'Refill for teachers', 'Completed', '2025-09-20 16:20:00'),
-(12, 13, 10, '2025-09-13', 'Clinic', NULL, NULL, 'For cleaning and sanitation', 'Completed', '2025-09-20 16:30:00'),
-(13, 14, 30, '2025-09-14', 'Admin Office', NULL, NULL, 'Printer ink refills', 'Completed', '2025-09-20 16:40:00'),
-(14, 15, 15, '2025-09-15', 'Accounting', NULL, NULL, 'Toner replacement for reports', 'Completed', '2025-09-20 16:50:00'),
-(15, 16, 5, '2025-09-16', 'Clinic', NULL, NULL, 'Restock of medical supplies', 'Completed', '2025-09-20 17:00:00'),
-(21, 9, 5, '2025-09-20', 'Alice', 'Bob', '2025-09-25', 'Restock bond papers', 'Completed', '2025-09-20 14:41:46'),
-(22, 10, 50, '2025-09-21', 'Charlie', 'Dana', '2025-09-26', 'Blue ballpoint pens for classroom', 'Completed', '2025-09-21 09:30:00'),
-(23, 11, 20, '2025-09-22', 'Eve', NULL, '2025-09-28', 'Whiteboard markers for meetings', 'Completed', '2025-09-22 10:15:00'),
-(24, 12, 10, '2025-09-23', 'Frank', 'Grace', '2025-09-29', 'Mops for janitorial team', 'Completed', '2025-09-23 11:20:00'),
-(25, 13, 5, '2025-09-24', 'Heidi', 'Ivan', '2025-09-30', 'Disinfectants for sanitization', 'Completed', '2025-09-24 12:00:00'),
-(26, 14, 3, '2025-09-25', 'Jack', 'Kate', '2025-10-01', 'Printer ink for office printers', 'Completed', '2025-09-25 08:45:00'),
-(27, 15, 2, '2025-09-26', 'Leo', NULL, '2025-10-02', 'Toner cartridges for printer', 'Completed', '2025-09-26 09:15:00'),
-(28, 16, 1, '2025-09-27', 'Mia', 'Nina', '2025-10-03', 'First aid kit for clinic', 'Completed', '2025-09-27 10:00:00');
+(1, 1, 5, '2025-09-01', 'Faculty Office', NULL, NULL, 'For new faculty computers', 'Completed', '2025-09-20 05:39:38'),
+(2, 2, 20, '2025-09-02', 'Registrar', NULL, NULL, 'Replacement of broken chairs', 'Pending', '2025-09-20 05:39:38'),
+(3, 3, 10, '2025-09-03', 'Library', NULL, NULL, 'Additional tables for study area', 'Pending', '2025-09-20 05:39:38'),
+(4, 4, 2, '2025-09-05', 'IT Department', NULL, NULL, 'Backup projector units', 'Rejected', '2025-09-20 05:39:38'),
+(5, 5, 50, '2025-09-06', 'Accounting', NULL, NULL, 'Monthly supply of bond paper', 'Rejected', '2025-09-20 05:39:38'),
+(6, 6, 100, '2025-09-07', 'Faculty Office', NULL, NULL, 'Whiteboard markers for classrooms', 'Completed', '2025-09-20 05:39:38'),
+(7, 7, 30, '2025-09-08', 'Clinic', NULL, NULL, 'Alcohol bottles for disinfection', 'Completed', '2025-09-20 05:39:38'),
+(8, 8, 10, '2025-09-09', 'Admin Office', NULL, NULL, 'Printer ink cartridges', 'Completed', '2025-09-20 05:39:38'),
+(9, 9, 50, '2025-09-10', 'Registrar', NULL, NULL, 'Printing of student forms', 'Completed', '2025-09-20 08:00:00'),
+(10, 10, 200, '2025-09-11', 'Faculty Office', NULL, NULL, 'For classroom use', 'Completed', '2025-09-20 08:10:00'),
+(11, 11, 100, '2025-09-12', 'Faculty Office', NULL, NULL, 'Refill for teachers', 'Completed', '2025-09-20 08:20:00'),
+(12, 13, 10, '2025-09-13', 'Clinic', NULL, NULL, 'For cleaning and sanitation', 'Completed', '2025-09-20 08:30:00'),
+(13, 14, 30, '2025-09-14', 'Admin Office', NULL, NULL, 'Printer ink refills', 'Completed', '2025-09-20 08:40:00'),
+(14, 15, 15, '2025-09-15', 'Accounting', NULL, NULL, 'Toner replacement for reports', 'Completed', '2025-09-20 08:50:00'),
+(15, 16, 5, '2025-09-16', 'Clinic', NULL, NULL, 'Restock of medical supplies', 'Completed', '2025-09-20 09:00:00'),
+(21, 9, 5, '2025-09-20', 'Alice', 'Bob', '2025-09-25', 'Restock bond papers', 'Completed', '2025-09-20 06:41:46'),
+(22, 10, 50, '2025-09-21', 'Charlie', 'Dana', '2025-09-26', 'Blue ballpoint pens for classroom', 'Completed', '2025-09-21 01:30:00'),
+(23, 11, 20, '2025-09-22', 'Eve', NULL, '2025-09-28', 'Whiteboard markers for meetings', 'Completed', '2025-09-22 02:15:00'),
+(24, 12, 10, '2025-09-23', 'Frank', 'Grace', '2025-09-29', 'Mops for janitorial team', 'Completed', '2025-09-23 03:20:00'),
+(25, 13, 5, '2025-09-24', 'Heidi', 'Ivan', '2025-09-30', 'Disinfectants for sanitization', 'Completed', '2025-09-24 04:00:00'),
+(26, 14, 3, '2025-09-25', 'Jack', 'Kate', '2025-10-01', 'Printer ink for office printers', 'Completed', '2025-09-25 00:45:00'),
+(27, 15, 2, '2025-09-26', 'Leo', NULL, '2025-10-02', 'Toner cartridges for printer', 'Completed', '2025-09-26 01:15:00'),
+(28, 16, 1, '2025-09-27', 'Mia', 'Nina', '2025-10-03', 'First aid kit for clinic', 'Completed', '2025-09-27 02:00:00');
 INSERT INTO `bcp_sms4_reports` (`id`, `report_type`, `reported_by`, `assigned_to`, `date_reported`, `status`, `description`, `evidence`, `asset_id`) VALUES
-(13, 'Lost', 2, NULL, '2025-09-24 01:35:36', 'In-Progress', 'aw', NULL, 5),
-(14, 'Damaged', 2, NULL, '2025-09-20 17:39:11', 'Pending', 'aw', NULL, 7),
-(15, 'Damaged', 2, NULL, '2025-09-24 01:35:41', 'Resolved', 'Sirang sira na body clock ko, jusko', NULL, 246),
-(16, 'Repair/Replacement', 2, 4, '2025-09-26 10:41:34', 'Resolved', '', NULL, 46),
-(17, 'Repair/Replacement', 2, NULL, '2025-09-24 01:35:45', 'Resolved', '', NULL, 198),
-(18, 'Lost', 2, 4, '2025-09-24 18:54:43', 'Resolved', '', NULL, 7),
-(19, 'Damaged', 2, 4, '2025-09-26 09:29:54', 'In-Progress', '', NULL, 73),
-(20, 'Repair/Replacement', 2, 4, '2025-09-24 19:30:51', 'Resolved', '', NULL, 165),
-(21, 'Repair/Replacement', 2, 4, '2025-09-24 18:53:34', 'Resolved', '', NULL, 97),
-(22, 'Lost', 2, 4, '2025-09-26 09:29:49', 'In-Progress', 'aw', NULL, 5);
+(13, 'Lost', 2, NULL, '2025-09-23 17:35:36', 'In-Progress', 'aw', NULL, 5),
+(14, 'Damaged', 2, NULL, '2025-09-20 09:39:11', 'Pending', 'aw', NULL, 7),
+(15, 'Damaged', 2, NULL, '2025-09-23 17:35:41', 'Resolved', 'Sirang sira na body clock ko, jusko', NULL, 246),
+(16, 'Repair/Replacement', 2, 4, '2025-09-26 02:41:34', 'Resolved', '', NULL, 46),
+(17, 'Repair/Replacement', 2, NULL, '2025-09-23 17:35:45', 'Resolved', '', NULL, 198),
+(18, 'Lost', 2, 4, '2025-09-24 10:54:43', 'Resolved', '', NULL, 7),
+(19, 'Damaged', 2, 4, '2025-09-26 01:29:54', 'In-Progress', '', NULL, 73),
+(20, 'Repair/Replacement', 2, 4, '2025-09-24 11:30:51', 'Resolved', '', NULL, 165),
+(21, 'Repair/Replacement', 2, 4, '2025-09-24 10:53:34', 'Resolved', '', NULL, 97),
+(22, 'Lost', 2, 4, '2025-09-26 01:29:49', 'In-Progress', 'aw', NULL, 5);
 INSERT INTO `bcp_sms4_requests` (`request_id`, `teacher_id`, `department_id`, `asset_id`, `consumable_id`, `quantity`, `request_type`, `notes`, `status`, `date_requested`) VALUES
-(25, 2, 3, 5, NULL, 1, 'Asset', 'safas', 'Approved', '2025-09-30 03:11:35'),
-(26, 2, 4, 8, NULL, 1, 'Asset', 'aaa', 'Approved', '2025-09-30 03:28:18'),
-(27, 2, 1, 7, NULL, 1, 'Asset', 'aawwafsfasgasgawgagsadgad', 'Approved', '2025-09-30 14:44:28');
+(25, 2, 3, 5, NULL, 1, 'Asset', 'safas', 'Approved', '2025-09-29 19:11:35'),
+(26, 2, 4, 8, NULL, 1, 'Asset', 'aaa', 'Approved', '2025-09-29 19:28:18'),
+(27, 2, 1, 7, NULL, 1, 'Asset', 'aawwafsfasgasgawgagsadgad', 'Approved', '2025-09-30 06:44:28');
 INSERT INTO `bcp_sms4_scheduling` (`id`, `asset`, `type`, `frequency`, `personnel`, `start_date`, `created_at`, `status`) VALUES
-(5, 'Air Conditioner', 'Cleaning', 'Weekly', 'Juan Delacruz', '2025-09-10', '2025-09-09 03:24:14', 'Scheduled'),
-(6, 'Air Conditioner', 'Inspection', 'Weekly', 'sdsd', '2025-09-10', '2025-09-09 03:30:24', 'Scheduled'),
-(7, 'Computer', 'Calibration', 'Monthly', 'Pat', '2025-09-12', '2025-09-09 16:58:11', 'Scheduled');
+(5, 'Air Conditioner', 'Cleaning', 'Weekly', 'Juan Delacruz', '2025-09-10', '2025-09-08 19:24:14', 'Scheduled'),
+(6, 'Air Conditioner', 'Inspection', 'Weekly', 'sdsd', '2025-09-10', '2025-09-08 19:30:24', 'Scheduled'),
+(7, 'Computer', 'Calibration', 'Monthly', 'Pat', '2025-09-12', '2025-09-09 08:58:11', 'Scheduled');
 
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
