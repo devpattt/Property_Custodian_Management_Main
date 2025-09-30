@@ -24,9 +24,15 @@ session_start();
   <link href="../../assets/vendor/simple-datatables/style.css" rel="stylesheet">
   <link href="../../assets/css/style.css" rel="stylesheet">
   <link href="../../assets/css/schedule_maintenance.css" rel="stylesheet">
+  <link href="../../assets/css/auditmodal.css" rel="stylesheet">
 </head>
 <body>
-    <?php include '../../components/nav-bar.php' ?>
+    <div class="toast-container" id="toastContainer"></div>
+
+    <?php
+     include '../../components/nav-bar.php';
+     include 'audit_handler.php'
+     ?>
     <main id="main" class="main">
 
       <div class="pagetitle">
@@ -40,239 +46,107 @@ session_start();
         </nav>
       </div>
 
-      <?php
-      include '../../connection.php';
-      $auditorName = isset($_SESSION['user_name']) ? $_SESSION['user_name'] : (isset($_SESSION['username']) ? $_SESSION['username'] : 'Admin');
-
-      if (isset($_POST['schedule_audit'])) {
-          $audit_date = $_POST['audit_date'];
-          $department_code = $_POST['department_code']; 
-          $custodian = $_POST['custodian'];
-
-          $stmt = $conn->prepare("INSERT INTO bcp_sms4_audit (audit_date, department_code, custodian, status) VALUES (?, ?, ?, 'Scheduled')");
-          $stmt->bind_param("sss", $audit_date, $department_code, $custodian);
-          $stmt->execute();
-          $stmt->close();
-          
-          echo "<div class='alert alert-success'>✅ Audit scheduled successfully!</div>";
-      }
-
-      if (isset($_POST['start_audit_id'])) {
-          $aid = intval($_POST['start_audit_id']);
-          $stmt = $conn->prepare("UPDATE bcp_sms4_audit SET status = 'Ongoing' WHERE id = ?");
-          $stmt->bind_param("i", $aid);
-          $stmt->execute();
-          $stmt->close();
-          
-          $res = $conn->query("SELECT department_code FROM bcp_sms4_audit WHERE id = {$aid} LIMIT 1");
-          $dep = $res && $res->num_rows > 0 ? $res->fetch_assoc()['department_code'] : null;
-
-          $_SESSION['current_audit'] = $aid;
-          $_SESSION['current_department'] = $dep;
-          
-          echo "<div class='alert alert-info'>🔄 Audit #{$aid} started!</div>";
-          echo "<script>
-              setTimeout(function() {
-                  document.getElementById('session-tab').click();
-              }, 1000);
-          </script>";
-      }
-
-    if (isset($_POST['end_audit'])) {
-        $audit_id = intval($_POST['audit_id']);
-
-        $sql = "SELECT department_code, audit_date, custodian 
-                FROM bcp_sms4_audit WHERE id = ?";
-        $stmt = $conn->prepare($sql);
-
-        if (!$stmt) {
-            echo "<div class='alert alert-danger'>❌ Error preparing audit query: " . $conn->error . "</div>";
-        } else {
-            $stmt->bind_param("i", $audit_id);
-            $stmt->execute();
-            $audit = $stmt->get_result()->fetch_assoc();
-            $stmt->close();
-        }
-
-        if ($audit) {
-        try {
-
-            $conn->begin_transaction();
-
-            $started_date = date("Y-m-d H:i:s", strtotime($audit['audit_date']));
-
-            $insertHistory = "INSERT INTO bcp_sms4_audit_history 
-                             (audit_id, department_code, started_date, completed_date, status, remarks) 
-                             VALUES (?, ?, ?, NOW(), 'Completed', ?)";
-            $stmt2 = $conn->prepare($insertHistory);
-
-            if (!$stmt2) {
-                throw new Exception("Failed to prepare history insert: " . $conn->error);
-            }
-
-            $remarks = "Audit completed by " . $auditorName . " for department " . $audit['department_code'];
-            $stmt2->bind_param("isss", $audit_id, $audit['department_code'], $started_date, $remarks);
-
-            if (!$stmt2->execute()) {
-                throw new Exception("History insert failed: " . $stmt2->error);
-            }
-            $history_id = $stmt2->insert_id;
-            $stmt2->close();
-
-            if (isset($_POST['status']) && !empty($_POST['status'])) {
-                $findingInsertStmt = $conn->prepare("INSERT INTO bcp_sms4_audit_findings 
-                                                    (history_id, asset_id, asset_name, quantity, finding_status, asset_condition, remarks) 
-                                                    VALUES (?, ?, ?, ?, ?, ?, ?)");
-
-                foreach ($_POST['status'] as $asset_id => $finding_status) {
-                    $asset_condition = $_POST['asset_condition'][$asset_id] ?? 'Good';
-                    $remarks   = $_POST['remarks'][$asset_id] ?? '';
-
-                    $assetQuery = $conn->prepare("SELECT item_name, quantity FROM bcp_sms4_issuance WHERE id = ?");
-                    $assetQuery->bind_param("i", $asset_id);
-                    $assetQuery->execute();
-                    $asset = $assetQuery->get_result()->fetch_assoc();
-                    $assetQuery->close();
-
-                    if ($asset) {
-                        $findingInsertStmt->bind_param(
-                            "iisiiss", 
-                            $history_id, 
-                            $asset_id, 
-                            $asset['item_name'], 
-                            $asset['quantity'], 
-                            $finding_status, 
-                            $asset_condition, 
-                            $remarks
-                        );
-
-                        if (!$findingInsertStmt->execute()) {
-                            throw new Exception("Finding insert failed: " . $findingInsertStmt->error);
-                        }
-
-                        if ($finding_status !== 'Valid' || $asset_condition !== 'Good') {
-                            $checkDiscTable = $conn->query("SHOW TABLES LIKE 'bcp_sms4_audit_discrepancies'");
-                            if ($checkDiscTable->num_rows == 0) {
-                                $createDiscTable = "CREATE TABLE bcp_sms4_audit_discrepancies (
-                                    id INT AUTO_INCREMENT PRIMARY KEY,
-                                    asset_tag VARCHAR(100),
-                                    issue TEXT,
-                                    resolved TINYINT DEFAULT 0,
-                                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                                )";
-                                $conn->query($createDiscTable);
-                            }
-
-                            $discrepancyStmt = $conn->prepare("INSERT INTO bcp_sms4_audit_discrepancies 
-                                                               (asset_tag, issue, resolved, created_at) 
-                                                               VALUES (?, ?, 0, NOW())");
-                            if ($discrepancyStmt) {
-                                $asset_tag = "ASSET-" . $asset_id; 
-                                $issue = "Status: " . $finding_status . ", Condition: " . $asset_condition;
-                                if (!empty($remarks)) {
-                                    $issue .= " - " . $remarks;
-                                }
-
-                                $discrepancyStmt->bind_param("ss", $asset_tag, $issue);
-                                $discrepancyStmt->execute();
-                                $discrepancyStmt->close();
-                            }
-                        }
-                    }
-                }
-                $findingInsertStmt->close();
-            }
-
-                  $updateAuditStmt = $conn->prepare("UPDATE bcp_sms4_audit SET status = 'Completed' WHERE id = ?");
-                  $updateAuditStmt->bind_param("i", $audit_id);
-                  $updateAuditStmt->execute();
-                  $updateAuditStmt->close();
-                  $conn->commit();
-
-                  unset($_SESSION['current_audit']);
-                  unset($_SESSION['current_department']);
-
-                  echo "<div class='alert alert-success'>✅ Audit #{$audit_id} completed successfully! Data has been moved to audit history.</div>";
-
-              } catch (Exception $e) {
-                  $conn->rollback();
-                  echo "<div class='alert alert-danger'>❌ Error ending audit: " . $e->getMessage() . "</div>";
-              }
-          } else {
-              echo "<div class='alert alert-danger'>❌ Audit not found!</div>";
-          }
-      }
-
-      $upcoming_audits = 0;
-      $result = $conn->query("SELECT COUNT(*) as total FROM bcp_sms4_audit WHERE audit_date >= CURDATE() AND status != 'Completed'");
-      if ($result && $row = $result->fetch_assoc()) {
-          $upcoming_audits = $row['total'];
-      }
-
-      $last_discrepancies = 0;
-      $result = $conn->query("SELECT COUNT(*) as total FROM bcp_sms4_audit_discrepancies WHERE resolved = 0");
-      if ($result && $row = $result->fetch_assoc()) {
-          $last_discrepancies = $row['total'];
-      }
-
-      $pending_replacements = 0;
-      $result = $conn->query("SELECT COUNT(*) as total FROM bcp_sms4_procurement WHERE status = 'Pending'");
-      if ($result && $row = $result->fetch_assoc()) {
-          $pending_replacements = $row['total'];
-      }
-
-      $current_audit_label = 'None';
-      if (isset($_SESSION['current_audit'])) {
-          $aid = intval($_SESSION['current_audit']);
-          $r = $conn->query("SELECT id, audit_date, department_code, custodian FROM bcp_sms4_audit WHERE id = {$aid}")->fetch_assoc();
-          if ($r) {
-              $current_audit_label = "Audit #{$r['id']} — {$r['audit_date']} ({$r['department_code']} / {$r['custodian']})";
-          } else {
-              unset($_SESSION['current_audit']);
-              unset($_SESSION['current_department']);
-          }
-      }
-
-      if (isset($_POST['discrepancy_id'])) {
-          $discrepancy_id = intval($_POST['discrepancy_id']);
-          
-          if (isset($_POST['file_report'])) {
-              $stmt = $conn->prepare("UPDATE bcp_sms4_audit_discrepancies SET resolved = 1 WHERE discrepancy_id = ?");
-              $stmt->bind_param("i", $discrepancy_id);
-              $stmt->execute();
-              $stmt->close();
-              echo "<div class='alert alert-success'>📄 Report filed for discrepancy #{$discrepancy_id}.</div>";
-          }
-
-          if (isset($_POST['request_replacement'])) {
-              $stmt = $conn->prepare("INSERT INTO bcp_sms4_procurement (discrepancy_id, status, requested_on) VALUES (?, 'Pending', NOW())");
-              $stmt->bind_param("i", $discrepancy_id);
-              $stmt->execute();
-              $stmt->close();
-              echo "<div class='alert alert-info'>🔄 Replacement request created for discrepancy #{$discrepancy_id}.</div>";
-          }
-
-          if (isset($_POST['mark_disposal'])) {
-              $stmt = $conn->prepare("UPDATE bcp_sms4_audit_discrepancies SET resolved = 1 WHERE discrepancy_id = ?");
-              $stmt->bind_param("i", $discrepancy_id);
-              $stmt->execute();
-              $stmt->close();
-              echo "<div class='alert alert-danger'>🗑️ Discrepancy #{$discrepancy_id} marked as disposed.</div>";
-          }
-      }
-      ?>
+      <!-- REUSABLE CONFIRMATION MODAL -->
+        <div class="modal fade" id="confirmModal" tabindex="-1">
+          <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="border:none !important; border-radius:10px !important; box-shadow:0 6px 20px rgba(0,0,0,0.25) !important; overflow:hidden !important; padding:0 !important; margin:0 !important;">
+              
+              <!-- Header -->
+              <div class="modal-header" id="confirmModalHeader" 
+                  style="background:#198754; color:#fff; border:none; padding:1rem 1.25rem; margin:0;">
+                <h5 class="modal-title" id="confirmModalTitle" style="margin:0; font-weight:600;"></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" style="filter:invert(1);"></button>
+              </div>
+              
+              <!-- Body -->
+              <div class="modal-body" id="confirmModalBody" 
+                  style="padding:1.25rem; font-size:0.95rem; color:#333; margin:0;">
+              </div>
+              
+              <!-- Footer -->
+              <div class="modal-footer" style="border:none; padding:1rem 1.25rem; margin:0;">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-success" id="confirmModalBtn"></button>
+              </div>
+            </div>
+          </div>
+        </div>
 
       <script>
-      document.addEventListener("DOMContentLoaded", function() {
-        const toast = document.querySelectorAll('.toast-alert'); 
-        toast.forEach(t => {
-          setTimeout(() => {
-            t.style.transition = "opacity 0.5s ease";
-            t.style.opacity = 0;
-            setTimeout(() => t.remove(), 500);
-          }, 3000);
-        });
-      });
+        function showToast(message, type = 'success') {
+          const icons = {
+            success: '<i class="bi bi-check-circle"></i>',   
+            info: '<i class="bi bi-info-circle"></i>',       
+            warning: '<i class="bi bi-exclamation-triangle"></i>', 
+            danger: '<i class="bi bi-x-circle"></i>'      
+          };
+
+        const titles = {
+          success: 'Success',
+          info: 'Information',
+          warning: 'Warning',
+          danger: 'Action Completed'
+        };
+
+        const toast = document.createElement('div');
+        toast.className = `custom-toast toast-${type}`;
+        toast.innerHTML = `
+          <div class="toast-icon">${icons[type]}</div>
+          <div class="toast-content">
+            <div class="toast-title">${titles[type]}</div>
+            <div class="toast-message">${message}</div>
+          </div>
+          <button class="toast-close" onclick="this.parentElement.remove()">×</button>
+        `;
+
+        document.getElementById('toastContainer').appendChild(toast);
+
+        setTimeout(() => {
+          toast.style.transition = 'opacity 0.3s, transform 0.3s';
+          toast.style.opacity = '0';
+          toast.style.transform = 'translateX(400px)';
+          setTimeout(() => toast.remove(), 300);
+        }, 4000);
+      }
+
+      function showConfirmModal(config) {
+        const modal = new bootstrap.Modal(document.getElementById('confirmModal'));
+        const header = document.getElementById('confirmModalHeader');
+        const title = document.getElementById('confirmModalTitle');
+        const body = document.getElementById('confirmModalBody');
+        const btn = document.getElementById('confirmModalBtn');
+        const closeBtn = header.querySelector('.btn-close');
+
+        header.className = 'modal-header';
+        if (config.type === 'danger') {
+          header.classList.add('bg-danger', 'text-white');
+          closeBtn.classList.add('btn-close-white');
+        } else if (config.type === 'warning') {
+          header.classList.add('bg-warning', 'text-dark');
+          closeBtn.classList.remove('btn-close-white');
+        } else if (config.type === 'success') {
+          header.classList.add('bg-success', 'text-white');
+          closeBtn.classList.add('btn-close-white');
+        } else {
+          header.classList.add('bg-primary', 'text-white');
+          closeBtn.classList.add('btn-close-white');
+        }
+
+        title.textContent = config.title || 'Confirm Action';
+        body.innerHTML = config.message || 'Are you sure?';
+
+        btn.textContent = config.btnText || 'Confirm';
+        btn.className = 'btn btn-' + (config.type || 'primary');
+
+        btn.onclick = function() {
+          modal.hide();
+          if (config.onConfirm) {
+            config.onConfirm();
+          }
+        };
+
+        modal.show();
+      }
       </script>
 
     <section class="section dashboard">
@@ -287,7 +161,7 @@ session_start();
                 </div>
                 <div class="ps-3">
                     <h6><?php echo $upcoming_audits; ?></h6>
-                    <span class="text-primary small">📅 Scheduled</span>
+                    <span class="text-primary small">Scheduled</span>
                 </div>
                 </div>
             </div>
@@ -303,7 +177,7 @@ session_start();
                 </div>
                 <div class="ps-3">
                     <h6><?php echo $last_discrepancies; ?></h6>
-                    <span class="text-danger small">⚠️ Issues Found</span>
+                    <span class="text-danger small">Issues Found</span>
                 </div>
                 </div>
             </div>
@@ -319,7 +193,7 @@ session_start();
                 </div>
                 <div class="ps-3">
                     <h6><?php echo $pending_replacements; ?></h6>
-                    <span class="text-warning small">🔄 Awaiting action</span>
+                    <span class="text-warning small">Awaiting action</span>
                 </div>
                 </div>
             </div>
@@ -356,8 +230,9 @@ session_start();
 
               <!-- Upcoming Audits -->
               <div class="tab-pane fade show active" id="upcoming" role="tabpanel">
-                <h5 class="card-title">Schedule New Audit</h5>
                 <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#scheduleAuditModal">Schedule New Audit</button>
+                
+                <!-- Schedule Audit Modal -->
                 <div class="modal fade" id="scheduleAuditModal" tabindex="-1">
                   <div class="modal-dialog">
                     <form method="POST" action="">
@@ -428,10 +303,26 @@ session_start();
                           </td>
                           <td>
                             <?php if ($row['status'] == 'Scheduled'): ?>
-                              <form method="POST" style="display:inline">
+                              <form method="POST" id="startAuditForm<?= $row['id'] ?>" style="display:none;">
                                 <input type="hidden" name="start_audit_id" value="<?= $row['id'] ?>">
-                                <button class="btn btn-sm btn-success" type="submit" onclick="return confirm('Start this audit?')">Start Audit</button>
                               </form>
+                              <button class="btn btn-sm btn-success" onclick="showConfirmModal({
+                                type: 'success',
+                                title: 'Confirm Start Audit',
+                                message: `
+                                  <p>Are you sure you want to start this audit?</p>
+                                  <ul class='list-unstyled'>
+                                    <li><strong>Audit ID:</strong> <?= $row['id'] ?></li>
+                                    <li><strong>Date:</strong> <?= $row['audit_date'] ?></li>
+                                    <li><strong>Department:</strong> <?= htmlspecialchars($row['department_code']) ?></li>
+                                    <li><strong>Custodian:</strong> <?= htmlspecialchars($row['custodian']) ?></li>
+                                  </ul>
+                                `,
+                                btnText: 'Yes, Start Audit',
+                                onConfirm: function() {
+                                  document.getElementById('startAuditForm<?= $row['id'] ?>').submit();
+                                }
+                              })">Start Audit</button>
                             <?php else: ?>
                               <span class="small text-muted">—</span>
                             <?php endif; ?>
@@ -453,8 +344,9 @@ session_start();
                     <strong>Current Audit:</strong> <?php echo htmlspecialchars($current_audit_label); ?>
                 </div>
 
-                <form method="POST" action="" onsubmit="return confirm('Are you sure you want to end this audit? This action cannot be undone.');">
+                <form method="POST" action="" id="endAuditForm">
                     <input type="hidden" name="audit_id" value="<?php echo intval($_SESSION['current_audit']); ?>">
+                    <input type="hidden" name="end_audit" value="1">
 
                     <table class="table datatable">
                     <thead>
@@ -471,7 +363,7 @@ session_start();
                     </thead>
                      <tbody>
                        <?php
-                        $auditId = intval($_SESSION['current_audit']);
+                       $auditId = intval($_SESSION['current_audit']);
                         $currentDept = $_SESSION['current_department'] ?? '';
 
                         if ($currentDept) {
@@ -482,13 +374,21 @@ session_start();
                                 $result = $assets->get_result();
                                 $assets->close();
                             } else {
-                                echo "<div class='alert alert-danger'>Error preparing query: " . $conn->error . "</div>";
+                                echo "<script>
+                                    window.addEventListener('load', function() {
+                                        showToast('Error preparing query: " . addslashes($conn->error) . "', 'danger');
+                                    });
+                                </script>";
                                 $result = false;
                             }
                         } else {
                             $result = $conn->query("SELECT id, reference_no, equipment_id, item_name, quantity, department_code FROM bcp_sms4_issuance ORDER BY id ASC");
                             if (!$result) {
-                                echo "<div class='alert alert-danger'>Error executing query: " . $conn->error . "</div>";
+                                echo "<script>
+                                    window.addEventListener('load', function() {
+                                        showToast('Error executing query: " . addslashes($conn->error) . "', 'danger');
+                                    });
+                                </script>";
                             }
                         }
 
@@ -510,7 +410,7 @@ session_start();
                                 </select>
                             </td>
                             <td>
-                                <select name="condition[<?php echo $row['id']; ?>]" class="form-select form-select-sm">
+                                <select name="asset_condition[<?php echo $row['id']; ?>]" class="form-select form-select-sm">
                                     <option value="Good">Good</option>
                                     <option value="Fair">Fair</option>
                                     <option value="Damaged">Damaged</option>
@@ -532,7 +432,22 @@ session_start();
                       </tbody>
                     </table>
                     <div class="d-flex gap-2">
-                        <button type="submit" name="end_audit" class="btn btn-danger mt-2">
+                        <button type="button" class="btn btn-danger mt-2" onclick="showConfirmModal({
+                          type: 'danger',
+                          title: 'Confirm End Audit',
+                          message: `
+                            <div class='alert alert-warning'>
+                              <i class='bi bi-exclamation-triangle-fill'></i> 
+                              <strong>Warning:</strong> This action cannot be undone!
+                            </div>
+                            <p>Are you sure you want to end this audit session?</p>
+                            <p class='mb-0'><strong>Current Audit:</strong> <?php echo htmlspecialchars($current_audit_label); ?></p>
+                          `,
+                          btnText: 'Yes, End Audit',
+                          onConfirm: function() {
+                            document.getElementById('endAuditForm').submit();
+                          }
+                        })">
                             <i class="bi bi-stop-circle"></i> End Audit & Save to History
                         </button>
                         <a href="#" class="btn btn-secondary mt-2" onclick="window.location.reload()">
@@ -540,6 +455,7 @@ session_start();
                         </a>
                     </div>
                 </form>
+
                 <?php else: ?>
                     <div class="alert alert-warning">
                         <strong>No Active Audit Session</strong><br>
@@ -583,15 +499,27 @@ session_start();
                               Generate Report
                           </button>
 
-                          <form method="POST" style="display:inline">
+                          <form method="POST" id="markDisposalForm<?= $row['discrepancy_id'] ?>" style="display:none;">
                             <input type="hidden" name="discrepancy_id" value="<?= $row['discrepancy_id'] ?>">
-                            <button type="submit" name="request_replacement" class="btn btn-info btn-sm">Request Replacement</button>
+                            <input type="hidden" name="mark_disposal" value="1">
                           </form>
 
-                          <form method="POST" style="display:inline">
-                            <input type="hidden" name="discrepancy_id" value="<?= $row['discrepancy_id'] ?>">
-                            <button type="submit" name="mark_disposal" class="btn btn-danger btn-sm">Mark Disposal</button>
-                          </form>
+                          <button class="btn btn-danger btn-sm" onclick="showConfirmModal({
+                            type: 'danger',
+                            title: 'Confirm Mark as Disposal',
+                            message: `
+                              <p>Are you sure you want to mark this discrepancy as disposed?</p>
+                              <ul class='list-unstyled'>
+                                <li><strong>Discrepancy ID:</strong> <?= $row['discrepancy_id'] ?></li>
+                                <li><strong>Asset Tag:</strong> <?= htmlspecialchars($row['audit_id'] ?? 'N/A') ?></li>
+                                <li><strong>Issue:</strong> <?= htmlspecialchars($row['description'] ?? 'No description') ?></li>
+                              </ul>
+                            `,
+                            btnText: 'Yes, Mark as Disposal',
+                            onConfirm: function() {
+                              document.getElementById('markDisposalForm<?= $row['discrepancy_id'] ?>').submit();
+                            }
+                          })">Mark Disposal</button>
                       </td>
                     </tr>
                     <?php endwhile; else: ?>
@@ -608,14 +536,23 @@ session_start();
                   let html = `
                     <div style="width: 100%; max-width: 800px; margin: auto; font-family: Arial, sans-serif; color: #000;">
                       
-                      <!-- Header -->
-                      <div style="text-align: center; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 20px;">
+                    <!-- Header -->
+                    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 20px;">
+                      
+                      <!-- Left/Text Section -->
+                      <div style="text-align: center; flex: 1;">
                         <h1 style="margin: 0; font-size: 20pt;">AUDIT DISCREPANCY REPORT</h1>
                         <p style="margin: 5px 0;">Property Custodian Management System</p>
                         <p style="margin: 0; font-size: 10pt;">Report No: ADR-${String(id).padStart(4, '0')}</p>
                         <p style="margin: 0; font-size: 10pt;">Generated by: <?= htmlspecialchars($_SESSION['username'] ?? 'Admin') ?></p>
                         <p style="margin: 0; font-size: 10pt;">Generated on: ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}</p>
                       </div>
+                      
+                      <!-- Right/Logo Section -->
+                      <div>
+                        <img src="../../assets/img/bagong_silang_logo.png" style="height:80px; width:auto;">
+                      </div>
+                    </div>
 
                       <!-- Discrepancy Details -->
                       <h2 style="font-size: 14pt; border-bottom: 1px solid #000; padding-bottom: 5px;">Discrepancy Details</h2>
@@ -714,8 +651,16 @@ session_start();
                         <span class="badge bg-success"><?= htmlspecialchars($row['status']) ?></span>
                       </td>
                       <td>
-                        <button class="btn btn-secondary btn-sm" onclick="viewAuditDetails(<?= $row['id'] ?>)">View Details</button>
-                        <button class="btn btn-primary btn-sm">Export PDF</button>
+                        <button class="btn btn-primary btn-sm"
+                          onclick="generateAuditReport(
+                            '<?= htmlspecialchars($row['audit_id']) ?>',
+                            '<?= htmlspecialchars($row['department_code']) ?>',
+                            '<?= date('M d, Y H:i', strtotime($row['started_date'])) ?>',
+                            '<?= date('M d, Y H:i', strtotime($row['completed_date'])) ?>',
+                            '<?= htmlspecialchars($row['status']) ?>'
+                          )">
+                          Export PDF
+                        </button>
                       </td>
                     </tr>
                     <?php endwhile; else: ?>
@@ -724,6 +669,69 @@ session_start();
                   </tbody>
                 </table>
               </div>
+
+              <script>
+              function generateAuditReport(auditId, department, started, completed, status) {
+                let html = `
+                  <html>
+                    <head>
+                      <title>Audit Report</title>
+                      <style>
+                        @page { size: A4; margin: 20mm; }
+                        body { font-family: Arial, sans-serif; color: #000; margin: 0; }
+                        .container { max-width: 800px; margin: auto; }
+                        h1, h2 { margin: 0 0 10px 0; }
+                        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+                        td { padding: 8px; border: 1px solid #000; vertical-align: top; }
+                        td.header { background-color: #f2f2f2; font-weight: bold; width: 30%; }
+                        .section { margin-bottom: 20px; }
+                        .footer { text-align: center; font-size: 10pt; margin-top: 30px; }
+                      </style>
+                    </head>
+                    <body>
+                      <div class="container">
+                        <!-- Header -->
+                        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 20px;">
+                          <div style="text-align: left;">
+                            <h1 style="margin:0;">AUDIT REPORT</h1>
+                            <p style="margin:0;">Property Custodian Management System</p>
+                            <p style="margin:0;">Audit Reference: AR-${String(auditId).padStart(4, '0')}</p>
+                            <p style="margin:0;">Generated by: <?= htmlspecialchars($_SESSION['username'] ?? 'Admin') ?></p>
+                            <p style="margin:0;">Generated on: ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}</p>
+                          </div>
+                          <div>
+                            <img src="../../assets/img/bagong_silang_logo.png" style="height:80px; width:auto;">
+                          </div>
+                        </div>
+
+                        <!-- Audit Details -->
+                        <div class="section">
+                          <h2>Audit Details</h2>
+                          <table>
+                            <tr><td class="header">Audit ID</td><td>${auditId}</td></tr>
+                            <tr><td class="header">Department</td><td>${department}</td></tr>
+                            <tr><td class="header">Started Date</td><td>${started}</td></tr>
+                            <tr><td class="header">Completed Date</td><td>${completed}</td></tr>
+                            <tr><td class="header">Status</td><td>${status}</td></tr>
+                          </table>
+                        </div>
+
+                        <!-- Footer -->
+                        <div class="footer">
+                          This is an official audit record generated by the Property Custodian Management System.
+                        </div>
+                      </div>
+                    </body>
+                  </html>
+                `;
+
+                let printWindow = window.open('', '', 'width=900,height=700');
+                printWindow.document.write(html);
+                printWindow.document.close();
+                printWindow.focus();
+                setTimeout(() => { printWindow.print(); printWindow.close(); }, 250);
+              }
+              </script>
 
             </div>
           </div>
@@ -752,6 +760,7 @@ session_start();
         alert('View details for audit history ID: ' + historyId);
     }
   </script>
+
 </main>
 </body>
   <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
