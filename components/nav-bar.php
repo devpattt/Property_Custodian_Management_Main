@@ -79,7 +79,7 @@ $userId = $_SESSION['user_id'] ?? 'N/A';
       <li class="nav-item <?php if($current_page == 'dashboard.php') echo 'active'; ?>">
               <a class="nav-link" href="<?= BASE_URL ?>User_Admin/dashboard.php">
                <i class="bi bi-bar-chart"></i>
-                <span>Reporting & Analytics</span>
+                <span>Dashboard</span>
               </a>
             </li>
             <hr class="sidebar-divider">
@@ -292,7 +292,7 @@ $userId = $_SESSION['user_id'] ?? 'N/A';
     <li class="nav-item <?php if($current_page == 'dashboard_teacher.php') echo 'active'; ?>">
         <a class="nav-link" href="<?= BASE_URL ?>User_Teachers/dashboard_teacher.php">
             <i class="bi bi-bar-chart"></i>
-            <span>Reporting & Analytics</span>
+            <span>Dashboard</span>
         </a>
     </li>
 
@@ -360,7 +360,7 @@ $userId = $_SESSION['user_id'] ?? 'N/A';
         <a class="nav-link <?= $currentPage === 'dashboard_custodians.php' ? 'active' : '' ?>" 
            href="<?=BASE_URL?>User_Custodians/dashboard_custodians.php">
             <i class="bi bi-bar-chart"></i>
-            <span>Reporting & Analytics</span>
+            <span>Dashboard</span>
         </a>
     </li>
 
