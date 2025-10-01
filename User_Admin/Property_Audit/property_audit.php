@@ -161,7 +161,11 @@ session_start();
     }
 
     $upcoming_audits = $conn->query("SELECT COUNT(*) as total FROM bcp_sms4_audit WHERE audit_date >= CURDATE() AND status != 'Completed'")->fetch_assoc()['total'] ?? 0;
-    $last_discrepancies = $conn->query("SELECT COUNT(*) as total FROM bcp_sms4_audit_discrepancies WHERE resolved = 0")->fetch_assoc()['total'] ?? 0;
+    $last_discrepancies = $conn->query("
+    SELECT COUNT(*) as total 
+    FROM bcp_sms4_audit_findings 
+    WHERE finding_status IN ('Disposed', 'Mismatch', 'Missing')
+")->fetch_assoc()['total'] ?? 0;
     $pending_replacements = $conn->query("SELECT COUNT(*) as total FROM bcp_sms4_procurement WHERE status = 'Pending'")->fetch_assoc()['total'] ?? 0;
 
 
@@ -335,9 +339,9 @@ session_start();
         }
         </script>
 
-        <section class="section dashboard">
+      <section class="section dashboard">
             <div class="row">
-            <div class="col-xxl-4 col-md-6">
+            <div class="col-md-6">
                 <div class="card info-card">
                 <div class="card-body">
                     <h5 class="card-title">Upcoming Audits</h5>
@@ -353,7 +357,7 @@ session_start();
                 </div>
                 </div>
             </div>
-            <div class="col-xxl-4 col-md-6">
+            <div class="col-md-6">
                 <div class="card info-card">
                 <div class="card-body">
                     <h5 class="card-title">Discrepancies</h5>
@@ -369,21 +373,6 @@ session_start();
                 </div>
                 </div>
             </div>
-            <div class="col-xxl-4 col-md-6">
-                <div class="card info-card">
-                <div class="card-body">
-                    <h5 class="card-title">Pending Replacements</h5>
-                    <div class="d-flex align-items-center">
-                    <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
-                        <i class="bi bi-arrow-repeat text-warning"></i>
-                    </div>
-                    <div class="ps-3">
-                        <h6><?php echo $pending_replacements; ?></h6>
-                        <span class="text-warning small">Awaiting action</span>
-                    </div>
-                    </div>
-                </div>
-                </div>
             </div>
             </div>
         </section>
@@ -676,205 +665,205 @@ session_start();
           <?php endif; ?>
       </div>
 
-    <!-- Discrepancies Tab -->
-    <div class="tab-pane fade" id="discrepancies" role="tabpanel">
-      <h5 class="card-title">Discrepancy List</h5>
-      
-      <?php if (isset($_SESSION['current_audit'])): ?>
-        <div class="alert alert-info">
-          <strong>Showing discrepancies for:</strong> <?php echo htmlspecialchars($current_audit_label); ?>
-        </div>
-      <?php endif; ?>
-      
-      <table class="table datatable">
-        <thead>
-          <tr>
-            <th>Finding ID</th>
-            <th>Asset ID</th>
-            <th>Asset Name</th>
-            <th>Quantity</th>
-            <th>Issue</th>
-            <th>Condition</th>
-            <th>Remarks</th>
-            <th>Recorded On</th>
-            <th>Action</th>
-          </tr>
-        </thead>    
-        <tbody>
-          <?php
-          if (isset($_SESSION['current_audit'])) {
-              $current_audit_id = intval($_SESSION['current_audit']);
+        <!-- Discrepancies Tab -->
+        <div class="tab-pane fade" id="discrepancies" role="tabpanel">
+          <h5 class="card-title">Discrepancy List</h5>
+          
+          <?php if (isset($_SESSION['current_audit'])): ?>
+            <div class="alert alert-info">
+              <strong>Showing discrepancies for:</strong> <?php echo htmlspecialchars($current_audit_label); ?>
+            </div>
+          <?php endif; ?>
+          
+          <table class="table datatable">
+            <thead>
+              <tr>
+                <th>Finding ID</th>
+                <th>Asset ID</th>
+                <th>Asset Name</th>
+                <th>Quantity</th>
+                <th>Issue</th>
+                <th>Condition</th>
+                <th>Remarks</th>
+                <th>Recorded On</th>
+                <th>Action</th>
+              </tr>
+            </thead>    
+            <tbody>
+              <?php
+              if (isset($_SESSION['current_audit'])) {
+                  $current_audit_id = intval($_SESSION['current_audit']);
 
-              $historyQuery = $conn->query("
-                  SELECT id FROM bcp_sms4_audit_history 
-                  WHERE audit_id = {$current_audit_id} 
-                  ORDER BY id DESC LIMIT 1
-              ");
-              
-              if ($historyQuery && $historyQuery->num_rows > 0) {
-                  $historyRow = $historyQuery->fetch_assoc();
-                  $history_id = $historyRow['id'];
+                  $historyQuery = $conn->query("
+                      SELECT id FROM bcp_sms4_audit_history 
+                      WHERE audit_id = {$current_audit_id} 
+                      ORDER BY id DESC LIMIT 1
+                  ");
                   
+                  if ($historyQuery && $historyQuery->num_rows > 0) {
+                      $historyRow = $historyQuery->fetch_assoc();
+                      $history_id = $historyRow['id'];
+                      
+                      $findings = $conn->query("
+                          SELECT * FROM bcp_sms4_audit_findings 
+                          WHERE history_id = {$history_id}
+                          AND finding_status IN ('Disposed', 'Mismatch', 'Missing')
+                          ORDER BY recorded_on DESC
+                      ");
+                  } else {
+                      $findings = null;
+                  }
+              } else {
                   $findings = $conn->query("
                       SELECT * FROM bcp_sms4_audit_findings 
-                      WHERE history_id = {$history_id}
-                      AND finding_status IN ('Disposed', 'Mismatch', 'Missing')
+                      WHERE finding_status IN ('Disposed', 'Mismatch', 'Missing')
                       ORDER BY recorded_on DESC
                   ");
-              } else {
-                  $findings = null;
               }
-          } else {
-              $findings = $conn->query("
-                  SELECT * FROM bcp_sms4_audit_findings 
-                  WHERE finding_status IN ('Disposed', 'Mismatch', 'Missing')
-                  ORDER BY recorded_on DESC
-              ");
-          }
-          
-          if ($findings && $findings->num_rows > 0):
-            while ($row = $findings->fetch_assoc()):
-          ?>
-          <tr>
-            <td><?= htmlspecialchars($row['id']) ?></td>
-            <td><?= htmlspecialchars($row['asset_id']) ?></td>
-            <td><?= htmlspecialchars($row['asset_name']) ?></td>
-            <td><?= htmlspecialchars($row['quantity']) ?></td>
-            <td>
-                <span class="badge bg-<?= 
-                    $row['finding_status'] == 'Missing' ? 'danger' : 
-                    ($row['finding_status'] == 'Mismatch' ? 'warning' : 'secondary') 
-                ?>">
-                    <?= htmlspecialchars($row['finding_status']) ?>
-                </span>
-            </td>
-            <td><?= htmlspecialchars($row['asset_condition']) ?></td>
-            <td><?= htmlspecialchars($row['remarks']) ?></td>
-            <td><?= date('M d, Y H:i', strtotime($row['recorded_on'])) ?></td>
-            <td>
-                <button class="btn btn-warning btn-sm" 
-                        onclick="generateDiscrepancyReport(
-                          '<?= $row['id'] ?>',
-                          '<?= htmlspecialchars($row['asset_id']) ?>',
-                          '<?= htmlspecialchars($row['asset_name']) ?>',
-                          '<?= htmlspecialchars($row['finding_status']) ?>',
-                          '<?= htmlspecialchars($row['asset_condition']) ?>',
-                          '<?= htmlspecialchars($row['remarks']) ?>',
-                          '<?= date('M d, Y H:i', strtotime($row['recorded_on'])) ?>'
-                        )">
-                    Generate Report
-                </button>
-            </td>
-          </tr>
-          <?php endwhile; else: ?>
-          <tr>
-            <td colspan="9" class="text-center">
-              <?php if (isset($_SESSION['current_audit'])): ?>
-                No discrepancies found for the current audit session
-              <?php else: ?>
-                No discrepancies found
-              <?php endif; ?>
-            </td>
-          </tr>
-          <?php endif; ?> 
-        </tbody>
-      </table>
-    </div>
-    
-<script>
-function generateDiscrepancyReport(id, assetId, assetName, status, condition, remarks, recorded) {
-    let html = `
-      <div style="width: 100%; max-width: 800px; margin: auto; font-family: Arial, sans-serif; color: #000;">
-        
-      <!-- Header -->
-      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 20px;">
-        
-        <!-- Left/Text Section -->
-        <div style="text-align: center; flex: 1;">
-          <h1 style="margin: 0; font-size: 20pt;">AUDIT DISCREPANCY REPORT</h1>
-          <p style="margin: 5px 0;">Property Custodian Management System</p>
-          <p style="margin: 0; font-size: 10pt;">Report No: ADR-${String(id).padStart(4, '0')}</p>
-          <p style="margin: 0; font-size: 10pt;">Generated by: <?= htmlspecialchars($_SESSION['username'] ?? 'Admin') ?></p>
-          <p style="margin: 0; font-size: 10pt;">Generated on: ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}</p>
+              
+              if ($findings && $findings->num_rows > 0):
+                while ($row = $findings->fetch_assoc()):
+              ?>
+              <tr>
+                <td><?= htmlspecialchars($row['id']) ?></td>
+                <td><?= htmlspecialchars($row['asset_id']) ?></td>
+                <td><?= htmlspecialchars($row['asset_name']) ?></td>
+                <td><?= htmlspecialchars($row['quantity']) ?></td>
+                <td>
+                    <span class="badge bg-<?= 
+                        $row['finding_status'] == 'Missing' ? 'danger' : 
+                        ($row['finding_status'] == 'Mismatch' ? 'warning' : 'secondary') 
+                    ?>">
+                        <?= htmlspecialchars($row['finding_status']) ?>
+                    </span>
+                </td>
+                <td><?= htmlspecialchars($row['asset_condition']) ?></td>
+                <td><?= htmlspecialchars($row['remarks']) ?></td>
+                <td><?= date('M d, Y H:i', strtotime($row['recorded_on'])) ?></td>
+                <td>
+                    <button class="btn btn-warning btn-sm" 
+                            onclick="generateDiscrepancyReport(
+                              '<?= $row['id'] ?>',
+                              '<?= htmlspecialchars($row['asset_id']) ?>',
+                              '<?= htmlspecialchars($row['asset_name']) ?>',
+                              '<?= htmlspecialchars($row['finding_status']) ?>',
+                              '<?= htmlspecialchars($row['asset_condition']) ?>',
+                              '<?= htmlspecialchars($row['remarks']) ?>',
+                              '<?= date('M d, Y H:i', strtotime($row['recorded_on'])) ?>'
+                            )">
+                        Generate Report
+                    </button>
+                </td>
+              </tr>
+              <?php endwhile; else: ?>
+              <tr>
+                <td colspan="9" class="text-center">
+                  <?php if (isset($_SESSION['current_audit'])): ?>
+                    No discrepancies found for the current audit session
+                  <?php else: ?>
+                    No discrepancies found
+                  <?php endif; ?>
+                </td>
+              </tr>
+              <?php endif; ?> 
+            </tbody>
+          </table>
         </div>
         
-        <!-- Right/Logo Section -->
-        <div>
-          <img src="../../assets/img/bagong_silang_logo.png" style="height:80px; width:auto;">
-        </div>
-      </div>
+    <script>
+    function generateDiscrepancyReport(id, assetId, assetName, status, condition, remarks, recorded) {
+        let html = `
+          <div style="width: 100%; max-width: 800px; margin: auto; font-family: Arial, sans-serif; color: #000;">
+            
+          <!-- Header -->
+          <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 20px;">
+            
+            <!-- Left/Text Section -->
+            <div style="text-align: center; flex: 1;">
+              <h1 style="margin: 0; font-size: 20pt;">AUDIT DISCREPANCY REPORT</h1>
+              <p style="margin: 5px 0;">Property Custodian Management System</p>
+              <p style="margin: 0; font-size: 10pt;">Report No: ADR-${String(id).padStart(4, '0')}</p>
+              <p style="margin: 0; font-size: 10pt;">Generated by: <?= htmlspecialchars($_SESSION['username'] ?? 'Admin') ?></p>
+              <p style="margin: 0; font-size: 10pt;">Generated on: ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}</p>
+            </div>
+            
+            <!-- Right/Logo Section -->
+            <div>
+              <img src="../../assets/img/bagong_silang_logo.png" style="height:80px; width:auto;">
+            </div>
+          </div>
 
-        <!-- Discrepancy Details -->
-        <h2 style="font-size: 14pt; border-bottom: 1px solid #000; padding-bottom: 5px;">Discrepancy Details</h2>
-        <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
-          <tr>
-            <td style="font-weight: bold; width: 30%; padding: 8px; border: 1px solid #000; background-color: #f2f2f2;">Finding ID</td>
-            <td style="padding: 8px; border: 1px solid #000;">${id}</td>
-          </tr>
-          <tr>
-            <td style="font-weight: bold; padding: 8px; border: 1px solid #000; background-color: #f2f2f2;">Asset ID</td>
-            <td style="padding: 8px; border: 1px solid #000;">${assetId}</td>
-          </tr>
-          <tr>
-            <td style="font-weight: bold; padding: 8px; border: 1px solid #000; background-color: #f2f2f2;">Asset Name</td>
-            <td style="padding: 8px; border: 1px solid #000;">${assetName}</td>
-          </tr>
-          <tr>
-            <td style="font-weight: bold; padding: 8px; border: 1px solid #000; background-color: #f2f2f2;">Finding Status</td>
-            <td style="padding: 8px; border: 1px solid #000;">${status}</td>
-          </tr>
-          <tr>
-            <td style="font-weight: bold; padding: 8px; border: 1px solid #000; background-color: #f2f2f2;">Asset Condition</td>
-            <td style="padding: 8px; border: 1px solid #000;">${condition}</td>
-          </tr>
-          <tr>
-            <td style="font-weight: bold; padding: 8px; border: 1px solid #000; background-color: #f2f2f2;">Date Recorded</td>
-            <td style="padding: 8px; border: 1px solid #000;">${recorded}</td>
-          </tr>
-        </table>
+            <!-- Discrepancy Details -->
+            <h2 style="font-size: 14pt; border-bottom: 1px solid #000; padding-bottom: 5px;">Discrepancy Details</h2>
+            <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+              <tr>
+                <td style="font-weight: bold; width: 30%; padding: 8px; border: 1px solid #000; background-color: #f2f2f2;">Finding ID</td>
+                <td style="padding: 8px; border: 1px solid #000;">${id}</td>
+              </tr>
+              <tr>
+                <td style="font-weight: bold; padding: 8px; border: 1px solid #000; background-color: #f2f2f2;">Asset ID</td>
+                <td style="padding: 8px; border: 1px solid #000;">${assetId}</td>
+              </tr>
+              <tr>
+                <td style="font-weight: bold; padding: 8px; border: 1px solid #000; background-color: #f2f2f2;">Asset Name</td>
+                <td style="padding: 8px; border: 1px solid #000;">${assetName}</td>
+              </tr>
+              <tr>
+                <td style="font-weight: bold; padding: 8px; border: 1px solid #000; background-color: #f2f2f2;">Finding Status</td>
+                <td style="padding: 8px; border: 1px solid #000;">${status}</td>
+              </tr>
+              <tr>
+                <td style="font-weight: bold; padding: 8px; border: 1px solid #000; background-color: #f2f2f2;">Asset Condition</td>
+                <td style="padding: 8px; border: 1px solid #000;">${condition}</td>
+              </tr>
+              <tr>
+                <td style="font-weight: bold; padding: 8px; border: 1px solid #000; background-color: #f2f2f2;">Date Recorded</td>
+                <td style="padding: 8px; border: 1px solid #000;">${recorded}</td>
+              </tr>
+            </table>
 
-        <!-- Problem Description -->
-        <h2 style="font-size: 14pt; border-bottom: 1px solid #000; padding-bottom: 5px;">Remarks & Details</h2>
-        <div style="border: 1px solid #000; padding: 15px; background-color: #fafafa; min-height: 100px; margin-bottom: 20px;">
-          ${remarks || 'No remarks provided'}
-        </div>
+            <!-- Problem Description -->
+            <h2 style="font-size: 14pt; border-bottom: 1px solid #000; padding-bottom: 5px;">Remarks & Details</h2>
+            <div style="border: 1px solid #000; padding: 15px; background-color: #fafafa; min-height: 100px; margin-bottom: 20px;">
+              ${remarks || 'No remarks provided'}
+            </div>
 
-        <!-- Action Plan Placeholder -->
-        <h2 style="font-size: 14pt; border-bottom: 1px solid #000; padding-bottom: 5px;">Corrective Action Plan</h2>
-        <div style="border: 1px solid #000; padding: 15px; min-height: 100px; margin-bottom: 20px;">
-          □ Item Repair &nbsp;&nbsp; □ Item Replacement &nbsp;&nbsp; □ Item Disposal &nbsp;&nbsp; □ Further Investigation
-          <div style="margin-top: 15px; border-top: 1px dashed #000; height: 50px;"></div>
-        </div>
+            <!-- Action Plan Placeholder -->
+            <h2 style="font-size: 14pt; border-bottom: 1px solid #000; padding-bottom: 5px;">Corrective Action Plan</h2>
+            <div style="border: 1px solid #000; padding: 15px; min-height: 100px; margin-bottom: 20px;">
+              □ Item Repair &nbsp;&nbsp; □ Item Replacement &nbsp;&nbsp; □ Item Disposal &nbsp;&nbsp; □ Further Investigation
+              <div style="margin-top: 15px; border-top: 1px dashed #000; height: 50px;"></div>
+            </div>
 
-        <!-- Signatures -->
-        <h2 style="font-size: 14pt; border-bottom: 1px solid #000; padding-bottom: 5px;">Authorization & Approval</h2>
-        <table style="width: 100%; margin-top: 10px; border-collapse: collapse;">
-          <tr>
-            <td style="width: 50%; border: 1px solid #000; text-align: center; padding: 20px;">
-              <div style="border-bottom: 2px solid #000; height: 50px; margin-bottom: 5px;"></div>
-              Property Custodian <br> Print Name & Signature <br> Date: ______________
-            </td>
-            <td style="width: 50%; border: 1px solid #000; text-align: center; padding: 20px;">
-              <div style="border-bottom: 2px solid #000; height: 50px; margin-bottom: 5px;"></div>
-              Supervisor/Manager <br> Print Name & Signature <br> Date: ______________
-            </td>
-          </tr>
-        </table>
+            <!-- Signatures -->
+            <h2 style="font-size: 14pt; border-bottom: 1px solid #000; padding-bottom: 5px;">Authorization & Approval</h2>
+            <table style="width: 100%; margin-top: 10px; border-collapse: collapse;">
+              <tr>
+                <td style="width: 50%; border: 1px solid #000; text-align: center; padding: 20px;">
+                  <div style="border-bottom: 2px solid #000; height: 50px; margin-bottom: 5px;"></div>
+                  Property Custodian <br> Print Name & Signature <br> Date: ______________
+                </td>
+                <td style="width: 50%; border: 1px solid #000; text-align: center; padding: 20px;">
+                  <div style="border-bottom: 2px solid #000; height: 50px; margin-bottom: 5px;"></div>
+                  Supervisor/Manager <br> Print Name & Signature <br> Date: ______________
+                </td>
+              </tr>
+            </table>
 
-        <!-- Footer -->
-        <div style="text-align: center; margin-top: 30px; font-size: 9pt; color: #666;">
-          This is an official document generated by the Property Custodian Management System.
-        </div>
-      </div>
-    `;
+            <!-- Footer -->
+            <div style="text-align: center; margin-top: 30px; font-size: 9pt; color: #666;">
+              This is an official document generated by the Property Custodian Management System.
+            </div>
+          </div>
+        `;
 
-    let printWindow = window.open('', '_blank', 'width=900,height=700');
-    printWindow.document.write(`<html><head><title>Audit Discrepancy Report</title></head><body>${html}</body></html>`);
-    printWindow.document.close();
-    printWindow.focus();
-    printWindow.print();
-}
-</script>
+        let printWindow = window.open('', '_blank', 'width=900,height=700');
+        printWindow.document.write(`<html><head><title>Audit Discrepancy Report</title></head><body>${html}</body></html>`);
+        printWindow.document.close();
+        printWindow.focus();
+        printWindow.print();
+    }
+    </script>
 
               <!-- Reports -->
               <div class="tab-pane fade" id="reports" role="tabpanel">
