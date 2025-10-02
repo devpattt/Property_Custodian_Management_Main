@@ -71,10 +71,13 @@ switch ($type) {
         die("Invalid report type");
 }
 
+// Updated SQL query to include supplier_name from items table
 $sql_query = "SELECT 
                 p.*, 
                 i.item_name, 
-                i.category 
+                i.category,
+                i.unit,
+                COALESCE(i.supplier_name, 'Not Assigned') AS supplier_name
               FROM bcp_sms4_procurement p
               JOIN bcp_sms4_items i ON p.item_id = i.item_id
               WHERE {$date_condition}
@@ -106,6 +109,8 @@ $statusMap = [
                 <th>Item Name</th> 
                 <th>Category</th>
                 <th>Quantity</th>
+                <th>Unit</th>
+                <th>Supplier</th>
                 <th>Requested By</th>
                 <th>Approved By</th>
                 <th>Expected Date</th>
@@ -121,6 +126,8 @@ $statusMap = [
                         <td><?= htmlspecialchars($row['item_name']) ?></td>
                         <td><?= htmlspecialchars($row['category']) ?></td>
                         <td><?= htmlspecialchars($row['quantity']) ?></td>
+                        <td><?= htmlspecialchars($row['unit']) ?></td>
+                        <td><?= htmlspecialchars($row['supplier_name']) ?></td>
                         <td><?= htmlspecialchars($row['requested_by']) ?></td>
                         <td><?= htmlspecialchars($row['approved_by']) ?></td>
                         <td><?= htmlspecialchars($row['expected_date']) ?></td>
@@ -130,7 +137,7 @@ $statusMap = [
                 <?php endwhile; ?>
             <?php else: ?>
                 <tr>
-                    <td colspan="9" class="text-center">No procurement records found for this period.</td>
+                    <td colspan="11" class="text-center">No procurement records found for this period.</td>
                 </tr>
             <?php endif; ?>
         </tbody>

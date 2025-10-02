@@ -1,12 +1,15 @@
 <?php
 session_start();
 include_once '../../connection.php'; 
+
+// Updated query to include supplier from items table
 $query = "SELECT 
             p.procurement_id,
             i.item_name AS item,
             i.category,
             p.quantity AS qty,
             i.unit,
+            COALESCE(i.supplier_name, 'Not Assigned') AS supplier_name,
             p.status
           FROM bcp_sms4_procurement p
           JOIN bcp_sms4_items i ON p.item_id = i.item_id
@@ -33,6 +36,7 @@ if ($result && $result->num_rows > 0) {
             "category" => $row['category'],
             "qty" => $row['qty'],
             "unit" => $row['unit'],
+            "supplier" => $row['supplier_name'],
             "status" => $row['status']
         ];
     }
@@ -98,6 +102,7 @@ if ($result && $result->num_rows > 0) {
           <th>Category</th>
           <th>Quantity</th>
           <th>Unit</th>
+          <th>Supplier</th>
           <th>Status</th>
         </tr>
       </thead>
@@ -110,6 +115,13 @@ if ($result && $result->num_rows > 0) {
               <td><?= htmlspecialchars($d['category']); ?></td>
               <td><?= htmlspecialchars($d['qty']); ?></td>
               <td><?= htmlspecialchars($d['unit']); ?></td>
+              <td>
+                <?php if ($d['supplier'] === 'Not Assigned'): ?>
+                  <span class="badge bg-secondary"><?= $d['supplier']; ?></span>
+                <?php else: ?>
+                  <?= htmlspecialchars($d['supplier']); ?>
+                <?php endif; ?>
+              </td>
               <td>
                 <form method="POST" action="assign_tag.php" class="d-flex align-items-center gap-2">
                   <input type="hidden" name="procurement_id" value="<?= $d['procurement_id']; ?>">
@@ -131,7 +143,7 @@ if ($result && $result->num_rows > 0) {
             </tr>
           <?php endforeach; ?>
         <?php else: ?>
-          <tr><td colspan="6">No deliveries found.</td></tr>
+          <tr><td colspan="7">No deliveries found.</td></tr>
         <?php endif; ?>
       </tbody>
     </table>
@@ -153,6 +165,7 @@ if ($result && $result->num_rows > 0) {
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
         <button type="button" class="btn btn-primary" id="confirmUpdate">Confirm</button>
+      </button>
       </div>
     </div>
   </div>
